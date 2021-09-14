@@ -1,10 +1,12 @@
-package ro.btrl.miswebappspringdemo.controller;
+package ro.btrl.miswebappspringdemo.db2.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ro.btrl.miswebappspringdemo.db2.dao.Db2Dao;
 
 import java.security.Principal;
 
@@ -14,11 +16,14 @@ import java.security.Principal;
  */
 
 @RestController
-@RequestMapping("/api/common")
-public class CommonController {
+@RequestMapping("/api/db2")
+public class Db2Controller {
 
-    @GetMapping("/user")
+    @Autowired
+    Db2Dao db2Dao;
+
+    @GetMapping("/bar")
     private ResponseEntity getUser(Principal principal) {
-        return ResponseEntity.status(HttpStatus.OK).body("test succesful");
+        return ResponseEntity.status(HttpStatus.OK).body(db2Dao.getDb2Models());
     }
 }
