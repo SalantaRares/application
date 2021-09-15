@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ro.btrl.miswebappspringdemo.db2.dao.Db2Dao;
+import ro.btrl.miswebappspringdemo.db2.service.Db2Service;
 
 import java.security.Principal;
 
@@ -20,10 +20,10 @@ import java.security.Principal;
 public class Db2Controller {
 
     @Autowired
-    Db2Dao db2Dao;
+    Db2Service db2Service;
 
     @GetMapping("/bar")
     private ResponseEntity getUser(Principal principal) {
-        return ResponseEntity.status(HttpStatus.OK).body(db2Dao.getDb2Models());
+        return ResponseEntity.status(HttpStatus.OK).body(db2Service.getDb2Models());
     }
 }

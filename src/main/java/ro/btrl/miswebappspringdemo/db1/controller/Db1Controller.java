@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import ro.btrl.miswebappspringdemo.db1.dao.Db1Dao;
+import ro.btrl.miswebappspringdemo.db1.service.Db1Service;
 
 import java.security.Principal;
 
@@ -20,10 +20,10 @@ import java.security.Principal;
 public class Db1Controller {
 
     @Autowired
-    Db1Dao db1Dao;
+    Db1Service db1Service;
 
     @GetMapping("/abc")
     private ResponseEntity getUser(Principal principal) {
-        return ResponseEntity.status(HttpStatus.OK).body(db1Dao.getDb1Models());
+        return ResponseEntity.status(HttpStatus.OK).body(db1Service.getDb1Models());
     }
 }
