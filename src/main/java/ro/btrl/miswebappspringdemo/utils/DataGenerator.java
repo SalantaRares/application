@@ -26,7 +26,7 @@ public class DataGenerator {
     }
 
     private static Object createObject(Class type) {
-        Object o = null;
+        Object o;
         try {
             o = type.newInstance();
 
@@ -48,19 +48,20 @@ public class DataGenerator {
     }
 
     private static Object returnFieldValue(Field field) {
+        int maxNr = 10000;
         if (field.getType().equals(String.class)) {
             return generateRandomString();
         } else if (Number.class.isAssignableFrom(field.getType())) {
             if (field.getType().equals(BigDecimal.class)) {
-                return new BigDecimal(generateRandomInt(1, 10000 ));
+                return new BigDecimal(generateRandomInt(1, maxNr));
             } else if (field.getType().equals(Float.class)) {
-                return (float) generateRandomInt(1, 10000);
+                return (float) generateRandomInt(1, maxNr);
             } else if (field.getType().equals(Double.class)) {
-                return (double) generateRandomInt(1, 10000);
+                return (double) generateRandomInt(1, maxNr);
             } else if (field.getType().equals(Long.class)) {
-                return (long) generateRandomInt(1, 10000);
+                return (long) generateRandomInt(1, maxNr);
             }
-            return generateRandomInt(1, 100);
+            return generateRandomInt(1, maxNr);
         } else if (field.getType().equals(Date.class)) {
             return new Date(System.currentTimeMillis() + generateRandomInt(-100000, 100000));
         } else if (field.getType().equals(Boolean.class)) {
@@ -68,7 +69,7 @@ public class DataGenerator {
         } else if (field.getType().isPrimitive()) {
             if (field.getType().equals(int.class) || field.getType().equals(double.class) || field.getType().equals(long.class)
                     || field.getType().equals(float.class)) {
-                return generateRandomInt(1, 10000);
+                return generateRandomInt(1, maxNr);
             } else if (field.getType().equals(boolean.class)) {
                 return generateRandomInt(0, 1) != 0;
             } else if (field.getType().equals(char.class)) {
