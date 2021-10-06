@@ -34,4 +34,5 @@ public class ExportClassExample {
     float attributeFourteenFloat;
     @ExcelFormatOptions(nrGroupSeparation = false)
     double attributeFifteenDouble;
+    Boolean attributeSixteenBoolean;
 }

@@ -65,7 +65,7 @@ public class DataGenerator {
         } else if (field.getType().equals(Date.class)) {
             return new Date(System.currentTimeMillis() + generateRandomInt(-100000, 100000));
         } else if (field.getType().equals(Boolean.class)) {
-            return true;
+            return generateRandomInt(0, 1) != 0;
         } else if (field.getType().isPrimitive()) {
             if (field.getType().equals(int.class) || field.getType().equals(double.class) || field.getType().equals(long.class)
                     || field.getType().equals(float.class)) {
