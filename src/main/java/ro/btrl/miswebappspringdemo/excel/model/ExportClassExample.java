@@ -21,6 +21,7 @@ public class ExportClassExample {
     @ExcelFormatOptions(alignment = ExcelGenerator.RIGHT_ALIGNMENT)
     String attributeFourString;
     boolean attributeFiveBoolean;
+    @ExcelFormatOptions(format = ExcelGenerator.DATE_TIME_DATA_FORMAT_STYLE)
     Date attributeSixDate;
     @ExcelFormatOptions(format = ExcelGenerator.STRING_DATA_FORMAT_STYLE)
     Integer attributeSevenInteger;

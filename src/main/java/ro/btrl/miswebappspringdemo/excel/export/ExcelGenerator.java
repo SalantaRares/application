@@ -35,6 +35,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     public static final int DATE_DATA_FORMAT_STYLE = 2;
     public static final int INTEGER_DATA_FORMAT_STYLE = 3;
     public static final int BIGDECIMAL_DATA_FORMAT_STYLE = 4;
+    public static final int DATE_TIME_DATA_FORMAT_STYLE = 5;
 
     private final String COMPOSED_ID_ANNOTATION = javax.persistence.EmbeddedId.class.getName();
     private final String EXCEL_IGNORED_PARAMETER_ANNOTATION = ExcelIgnoreParam.class.getName();
@@ -79,9 +80,13 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     private CellStyle STYLE_ALIGNED_LEFT;
     private CellStyle STYLE_ALIGNED_RIGHT;
 
-    private CellStyle STYLE_ALIGNED_CENTER_DATA_FORMAT;
-    private CellStyle STYLE_ALIGNED_LEFT_DATA_FORMAT;
-    private CellStyle STYLE_ALIGNED_RIGHT_DATA_FORMAT;
+    private CellStyle STYLE_ALIGNED_CENTER_DATE_FORMAT;
+    private CellStyle STYLE_ALIGNED_LEFT_DATE_FORMAT;
+    private CellStyle STYLE_ALIGNED_RIGHT_DATE_FORMAT;
+
+    private CellStyle STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT;
+    private CellStyle STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT;
+    private CellStyle STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT;
 
     private CellStyle STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT;
     private CellStyle STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT;
@@ -95,14 +100,14 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     private CellStyle headerStyle;
 
     private short DATE_DATA_FORMAT;
+    private short DATE_TIME_DATA_FORMAT;
     private short INTEGER_DATA_FORMAT;
     private short BIGDECIMAL_DATA_FORMAT;
 
     private List<String> SMALL_SIZE_COLUMNS;
 
     // messages
-    private final String FIELD_VALUE_EXTRACTION_ERROR="Eroare la extragerea valorilor din obiecte!";
-
+    private final String FIELD_VALUE_EXTRACTION_ERROR = "Eroare la extragerea valorilor din obiecte!";
 
 
     public ExcelGenerator() {
@@ -115,7 +120,8 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         if (this.dataList != null && !this.dataList.isEmpty()) {
             initializeCellStyles();
             extractDetailsFromData();
-            workbook = generateReport();
+            generateReport();
+            workbook = this.workbook;
         } else {
             workbook.createSheet("Sheet");
         }
@@ -186,6 +192,8 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                 fieldOptions.setStyle(getAlignedBigDecimalStyle(alignment));
             } else if (excelFormatOptions.format() == DATE_DATA_FORMAT_STYLE) {
                 fieldOptions.setStyle(getAlignedDateStyle(alignment));
+            } else if (excelFormatOptions.format() == DATE_TIME_DATA_FORMAT_STYLE) {
+                fieldOptions.setStyle(getAlignedDateTimeStyle(alignment));
             } else if (excelFormatOptions.format() == INTEGER_DATA_FORMAT_STYLE) {
                 fieldOptions.setStyle(getAlignedIntegerStyle(alignment));
             } else {
@@ -274,16 +282,26 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     private CellStyle getAlignedDateStyle(String alignment) {
         if (alignment != null && alignment.equals(RIGHT_ALIGNMENT)) {
-            return STYLE_ALIGNED_RIGHT_DATA_FORMAT;
+            return STYLE_ALIGNED_RIGHT_DATE_FORMAT;
         } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
-            return STYLE_ALIGNED_LEFT_DATA_FORMAT;
+            return STYLE_ALIGNED_LEFT_DATE_FORMAT;
         } else {
-            return STYLE_ALIGNED_CENTER_DATA_FORMAT;
+            return STYLE_ALIGNED_CENTER_DATE_FORMAT;
+        }
+    }
+
+    private CellStyle getAlignedDateTimeStyle(String alignment) {
+        if (alignment != null && alignment.equals(RIGHT_ALIGNMENT)) {
+            return STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT;
+        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
+            return STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT;
+        } else {
+            return STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT;
         }
     }
 
 
-    private Workbook generateReport() {
+    private void generateReport() {
         for (int i = 0; i < this.sheetsNo; i++) {
             Sheet sheet = this.workbook.createSheet("Sheet" + (i + 1));
             setHeader(sheet);
@@ -292,7 +310,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
             addRow(getValuesFromObject(obj));
         }
         setColumnsWidth();
-        return this.workbook;
     }
 
     /**
@@ -388,7 +405,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
             } else if (input instanceof Short) {
                 cell.setCellValue((Short) input);
             } else if (input instanceof Date) {
-                cell.getCellStyle().setDataFormat(DATE_DATA_FORMAT);
                 cell.setCellValue((Date) input);
             } else {
                 cell.setCellValue(String.valueOf(input));
@@ -407,7 +423,8 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     private void initializeCellStyles() {
         CreationHelper createHelper = workbook.getCreationHelper();
-        DATE_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy");
+        DATE_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy ");
+        DATE_TIME_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy  h:mm:ss");
         INTEGER_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0");
         BIGDECIMAL_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0.00");
 
@@ -415,12 +432,12 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         STYLE_ALIGNED_LEFT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
         STYLE_ALIGNED_RIGHT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
 
-        STYLE_ALIGNED_CENTER_DATA_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_CENTER_DATA_FORMAT.setDataFormat(DATE_DATA_FORMAT);
-        STYLE_ALIGNED_LEFT_DATA_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_LEFT_DATA_FORMAT.setDataFormat(DATE_DATA_FORMAT);
-        STYLE_ALIGNED_RIGHT_DATA_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_RIGHT_DATA_FORMAT.setDataFormat(DATE_DATA_FORMAT);
+        STYLE_ALIGNED_CENTER_DATE_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
+        STYLE_ALIGNED_CENTER_DATE_FORMAT.setDataFormat(DATE_DATA_FORMAT);
+        STYLE_ALIGNED_LEFT_DATE_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
+        STYLE_ALIGNED_LEFT_DATE_FORMAT.setDataFormat(DATE_DATA_FORMAT);
+        STYLE_ALIGNED_RIGHT_DATE_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
+        STYLE_ALIGNED_RIGHT_DATE_FORMAT.setDataFormat(DATE_DATA_FORMAT);
 
 
         STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
@@ -429,6 +446,13 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT.setDataFormat(BIGDECIMAL_DATA_FORMAT);
         STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
         STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT.setDataFormat(BIGDECIMAL_DATA_FORMAT);
+
+        STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
+        STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT.setDataFormat(DATE_TIME_DATA_FORMAT);
+        STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
+        STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT.setDataFormat(DATE_TIME_DATA_FORMAT);
+        STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
+        STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT.setDataFormat(DATE_TIME_DATA_FORMAT);
 
         STYLE_ALIGNED_CENTER_INTEGER_FORMAT = STYLE_ALIGNED_CENTER;
         STYLE_ALIGNED_CENTER_INTEGER_FORMAT.setDataFormat(INTEGER_DATA_FORMAT);
