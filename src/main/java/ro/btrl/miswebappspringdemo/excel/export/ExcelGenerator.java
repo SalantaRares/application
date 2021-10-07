@@ -98,7 +98,12 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     private short INTEGER_DATA_FORMAT;
     private short BIGDECIMAL_DATA_FORMAT;
 
-    private static List<String> SMALL_SIZE_COLUMNS;
+    private List<String> SMALL_SIZE_COLUMNS;
+
+    // messages
+    private final String FIELD_VALUE_EXTRACTION_ERROR="Eroare la extragerea valorilor din obiecte!";
+
+
 
     public ExcelGenerator() {
     }
@@ -312,7 +317,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                 rowValue.setStyle(fieldOptions.getStyle());
                 rowDetails.add(rowValue);
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new CustomException("Eroare la extragerea valorilor din obiecte!", HttpStatus.INTERNAL_SERVER_ERROR);
+                throw new CustomException(FIELD_VALUE_EXTRACTION_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
         return rowDetails;
@@ -344,7 +349,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                 return field.get(object);
             }
         } catch (IllegalAccessException e) {
-            throw new CustomException("Eroare la extragerea valorilor din obiecte!", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new CustomException(FIELD_VALUE_EXTRACTION_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -459,11 +464,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     }
 
     private boolean isFieldAnnotated(Field field, String annotationFullPath) {
-        if (getAnnotation(field, annotationFullPath) != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return getAnnotation(field, annotationFullPath) != null;
     }
 
     private Annotation getAnnotation(Field field, String annotationFullPath) {
@@ -487,12 +488,12 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     }
 
     public static String formatCamelCaseString(String string) {
-        String splitString = "";
+        StringBuilder splitString = new StringBuilder();
         String[] splitVector = string.split("(?<=[a-z])(?=[A-Z])");
         for (String word : splitVector) {
-            splitString = splitString + word.toUpperCase() + " ";
+            splitString.append(word.toUpperCase()).append(" ");
         }
-        return splitString;
+        return splitString.toString();
     }
 
     @Getter
