@@ -2,25 +2,30 @@ package ro.btrl.miswebappspringdemo.excel.export;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.view.document.AbstractXlsxStreamingView;
 import ro.btrl.miswebappspringdemo.excel.export.annotations.ExcelCustomColumnName;
 import ro.btrl.miswebappspringdemo.excel.export.annotations.ExcelFormatOptions;
 import ro.btrl.miswebappspringdemo.excel.export.annotations.ExcelIgnoreParam;
+import ro.btrl.miswebappspringdemo.exceptions.CustomException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     //CONSTANTS
     public static final String EXPORT_LIST_NAME = "objects";
-    public static final String EXPORT_CUSTOM_HEADER = "HEADER_MAPPING";
+    public static final String EXPORT_CUSTOM_ATTRIBUTES = "ATTRIBUTES_MAPPING";
+    public static final String EXPORT_SMALL_SIZE_COLUMNS = "SMALL_COLUMNS";
     public static final String CENTER_ALIGNMENT = "CENTER";
     public static final String LEFT_ALIGNMENT = "LEFT";
     public static final String RIGHT_ALIGNMENT = "RIGHT";
@@ -31,41 +36,39 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     public static final int INTEGER_DATA_FORMAT_STYLE = 3;
     public static final int BIGDECIMAL_DATA_FORMAT_STYLE = 4;
 
-    private String COMPOSED_ID_ANNOTATION = javax.persistence.EmbeddedId.class.getName();
-    private String EXCEL_IGNORED_PARAMETER_ANNOTATION = ExcelIgnoreParam.class.getName();
-    private String EXCEL_CUSTOM_COLUMN_NAME_ANNOTATION = ExcelCustomColumnName.class.getName();
-    private Class EXCEL_FORMAT_OPTIONS_ANNOTATION = ExcelFormatOptions.class;
+    private final String COMPOSED_ID_ANNOTATION = javax.persistence.EmbeddedId.class.getName();
+    private final String EXCEL_IGNORED_PARAMETER_ANNOTATION = ExcelIgnoreParam.class.getName();
+    private final String EXCEL_CUSTOM_COLUMN_NAME_ANNOTATION = ExcelCustomColumnName.class.getName();
+    private final Class<ExcelFormatOptions> EXCEL_FORMAT_OPTIONS_ANNOTATION = ExcelFormatOptions.class;
 
-    private static final short HEIGHT_FACTOR = 20;
-    private static final short HEADER_ROW_HEIGHT = 32 * HEIGHT_FACTOR;
-    private static final short ROW_HEIGHT = 15 * HEIGHT_FACTOR;
+    private final short HEIGHT_FACTOR = 20;
+    private final short HEADER_ROW_HEIGHT = 32 * HEIGHT_FACTOR;
+    private final short ROW_HEIGHT = 15 * HEIGHT_FACTOR;
 
-    private static final short WIDTH_FACTOR = 263;
-    private static final short DEFAULT_COLUMN_WIDTH = 30 * WIDTH_FACTOR;
-    private static final short SMALL_COLUMN_WIDTH = 11 * WIDTH_FACTOR;
+    private final short WIDTH_FACTOR = 263;
+    private final short DEFAULT_COLUMN_WIDTH = 30 * WIDTH_FACTOR;
+    private final short SMALL_COLUMN_WIDTH = 11 * WIDTH_FACTOR;
 
 
-    private static final int HEADER_ROW_INDEX = 0;
-    private static final int DATA_START_ROW_INDEX = 1;
+    private final int HEADER_ROW_INDEX = 0;
+    private final int DATA_START_ROW_INDEX = 1;
 
-    private static final HorizontalAlignment ALIGN_CENTER = HorizontalAlignment.CENTER;
-    private static final VerticalAlignment ALIGN_CENTER_VERTICAL = VerticalAlignment.CENTER;
-    private static final HorizontalAlignment ALIGN_LEFT = HorizontalAlignment.LEFT;
-    private static final HorizontalAlignment ALIGN_RIGHT = HorizontalAlignment.RIGHT;
+    private final HorizontalAlignment ALIGN_CENTER = HorizontalAlignment.CENTER;
+    private final VerticalAlignment ALIGN_CENTER_VERTICAL = VerticalAlignment.CENTER;
+    private final HorizontalAlignment ALIGN_LEFT = HorizontalAlignment.LEFT;
+    private final HorizontalAlignment ALIGN_RIGHT = HorizontalAlignment.RIGHT;
 
 
     //REPORT DATA OBJECTS
     private List<Object> dataList = null;
-    private List<String> customHeader = null;
-    private int dataListSize = 0;
+    private List<String> customAttributes = null;
 
     //EXCEL RELATED ATTRIBUTES
     private Workbook workbook = null;
     private int sheetsNo = 0;
-    private static final int MAXROWSHEET = 1000000;
-    private Map<String, FieldOptions> referenceObjectFieldsOptions = new HashMap<>();
-    private Boolean isUsingCustomHeader;
-    private List<String> header = new ArrayList<>();
+    private final int MAXROWSHEET = 1000000;
+    private final List<FieldOptions> referenceObjectFieldsOptions = new ArrayList<>();
+    private final List<String> header = new ArrayList<>();
     private int currentRowIndex = DATA_START_ROW_INDEX;
     private int currentSheetIndex = 0;
     private static String EMPTY = "";
@@ -95,7 +98,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     private short INTEGER_DATA_FORMAT;
     private short BIGDECIMAL_DATA_FORMAT;
 
-    private static final List<String> SMALL_SIZE_COLUMNS = new ArrayList<>(Arrays.asList("DATA HIST", "HIST DATE", "CIF", "CIF CLIENT", "CATEGORIE CLIENT", "COD PRODUS", "DATA DESCHIDERE", "DATA INCHIDERE", "ID UNIT", "ID SUCU", "ID SUCURSALA"));
+    private static List<String> SMALL_SIZE_COLUMNS;
 
     public ExcelGenerator() {
     }
@@ -115,50 +118,54 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     private void fetchDataFromInput(Map<String, Object> model) {
         this.dataList = (List<Object>) model.get(EXPORT_LIST_NAME);
-        if (model.get(EXPORT_CUSTOM_HEADER) != null) {
-            customHeader = (List<String>) model.get(EXPORT_CUSTOM_HEADER);
+        if (model.get(EXPORT_CUSTOM_ATTRIBUTES) != null) {
+            customAttributes = (List<String>) model.get(EXPORT_CUSTOM_ATTRIBUTES);
+        }
+        if (model.get(EXPORT_SMALL_SIZE_COLUMNS) != null) {
+            SMALL_SIZE_COLUMNS = (List<String>) model.get(EXPORT_SMALL_SIZE_COLUMNS);
+        } else {
+            SMALL_SIZE_COLUMNS = new ArrayList<>();
         }
     }
 
     private void extractDetailsFromData() {
-        this.dataListSize = this.dataList.size();
-        this.sheetsNo = (this.dataListSize / MAXROWSHEET) + 1;
-        this.isUsingCustomHeader = this.customHeader != null;
+        this.sheetsNo = (this.dataList.size() / MAXROWSHEET) + 1;
         //LIST HAS ELEMENTS
-        if (this.dataList != null && this.dataListSize > 0) {
-            extractInfoForReferenceObjectFieldsAndHeader(this.dataList.get(0).getClass());
+        if (this.dataList.size() > 0) {
+            setFieldsOptionsAndHeader(this.dataList.get(0).getClass().getDeclaredFields(), false);
         }
-        if (this.isUsingCustomHeader) {
-            this.header = this.customHeader;
-        }
-
     }
 
-    private void extractInfoForReferenceObjectFieldsAndHeader(Class referenceObject) {
-        final Field[] declaredFields = referenceObject.getDeclaredFields();
-        setFieldsOptionsAndHeader(declaredFields);
-    }
-
-    private void setFieldsOptionsAndHeader(Field[] fields) {
+    private void setFieldsOptionsAndHeader(Field[] fields, boolean isInComposite) {
         for (Field field : fields) {
             field.setAccessible(true);
             if (isFieldAnnotated(field, EXCEL_IGNORED_PARAMETER_ANNOTATION)) continue;
             if (!isFieldAnnotated(field, COMPOSED_ID_ANNOTATION)) {
-                setFieldsOptionsAndHeader(field);
+                if (!isAttributeOfInterest(field.getName())) {
+                    continue;
+                }
+                setFieldsOptionsAndHeader(field, isInComposite);
             } else {
-                setFieldsOptionsAndHeader(field.getType().getDeclaredFields());
+                setFieldsOptionsAndHeader(field.getType().getDeclaredFields(), true);
             }
         }
     }
 
-    private void setFieldsOptionsAndHeader(Field field) {
-        processFieldsOptions(field);
+    private boolean isAttributeOfInterest(String fieldName) {
+        return customAttributes == null || customAttributes.isEmpty() || customAttributes.contains(fieldName);
+    }
+
+    private void setFieldsOptionsAndHeader(Field field, boolean isInComposite) {
+        processFieldsOptions(field, isInComposite);
         header.add(getHeaderEntryFromField(field));
     }
 
-    private void processFieldsOptions(Field field) {
+    private void processFieldsOptions(Field field, boolean isInComposite) {
         ExcelFormatOptions excelFormatOptionsAnnotation = (ExcelFormatOptions) getAnnotation(field, EXCEL_FORMAT_OPTIONS_ANNOTATION.getName());
-        this.referenceObjectFieldsOptions.put(field.getName(), getCellStyleFromOptions(excelFormatOptionsAnnotation, field.getType()));
+        FieldOptions fieldOptions = getCellStyleFromOptions(excelFormatOptionsAnnotation, field.getType());
+        fieldOptions.setInComposite(isInComposite);
+        fieldOptions.setFieldName(field.getName());
+        this.referenceObjectFieldsOptions.add(fieldOptions);
     }
 
     private FieldOptions getCellStyleFromOptions(ExcelFormatOptions excelFormatOptions, Class objectType) {
@@ -190,11 +197,11 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                     } else {
                         fieldOptions.setStyle(getAlignedSimpleStyle(alignment));
                     }
-                }else{
+                } else {
                     if (objectType.equals(double.class) || objectType.equals(float.class)
-                    ||objectType.equals(short.class) || objectType.equals(int.class) || objectType.equals(long.class)) {
+                            || objectType.equals(short.class) || objectType.equals(int.class) || objectType.equals(long.class)) {
                         fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment));
-                    }  else {
+                    } else {
                         fieldOptions.setStyle(getAlignedSimpleStyle(alignment));
                     }
                 }
@@ -284,47 +291,64 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     }
 
     /**
-     * Gets the values from every attribute from object
-     * If an attribute is a compose id, gets the values from it
+     * Gets the values from  attribute of interest from object
+     * If an attribute is a composite id, gets the values from it
      * And associates a style
      *
      * @param object - from where to get the attributes values
-     * @return - list of object values
+     * @return - list of object values and cell styles
      */
-    @SneakyThrows
-    private List<FormatObject> getValuesFromObject(Object object) {
-        List<FormatObject> objects = new ArrayList<>();
-        if (object == null || object.getClass().getDeclaredFields().length == 0) return objects;
-        for (Field field : object.getClass().getDeclaredFields()) {
-            field.setAccessible(true);
-            boolean isComposeId = isFieldAnnotated(field, COMPOSED_ID_ANNOTATION);
-            if (isFieldAnnotated(field, EXCEL_IGNORED_PARAMETER_ANNOTATION)) {
-                continue;
-            }
-
-            FormatObject objectField = new FormatObject();
-            if (field.get(object) instanceof Number) {
-                if (globalNrGroupSeparation && this.referenceObjectFieldsOptions.get(field.getName()).isNrGroupSeparation()) {
-                    objectField.setObject(field.get(object));
+    private List<RowDetails> getValuesFromObject(Object object) {
+        List<RowDetails> rowDetails = new ArrayList<>();
+        for (FieldOptions fieldOptions : referenceObjectFieldsOptions) {
+            RowDetails rowValue = new RowDetails();
+            try {
+                if (fieldOptions.isInComposite) {
+                    Object composite = getCompositeIdFromOject(object);
+                    rowValue.setObject(getObjectValueByField(composite.getClass().getDeclaredField(fieldOptions.fieldName), composite, fieldOptions.isNrGroupSeparation()));
                 } else {
-                    objectField.setObject(field.get(object).toString());
+                    rowValue.setObject(getObjectValueByField(object.getClass().getDeclaredField(fieldOptions.fieldName), object, fieldOptions.isNrGroupSeparation()));
                 }
-            } else {
-                objectField.setObject(field.get(object));
-            }
-
-            if (!isComposeId) {
-                objectField.setStyle(this.referenceObjectFieldsOptions.get(field.getName()).getStyle());
-                objects.add(objectField);
-            } else {
-                objects.addAll(getValuesFromObject(objectField.getObject()));
+                rowValue.setStyle(fieldOptions.getStyle());
+                rowDetails.add(rowValue);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new CustomException("Eroare la extragerea valorilor din obiecte!", HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
-        return objects;
+        return rowDetails;
+    }
+
+    private Object getCompositeIdFromOject(Object object) throws IllegalAccessException {
+        Field[] fields = object.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            if (isFieldAnnotated(field, COMPOSED_ID_ANNOTATION)) {
+                return field.get(object);
+            }
+        }
+        return null;
+
     }
 
 
-    private void addRow(List<FormatObject> rowElements) {
+    private Object getObjectValueByField(Field field, Object object, boolean nrGroupSeparation) {
+        try {
+            field.setAccessible(true);
+            if (field.get(object) instanceof Number) {
+                if (globalNrGroupSeparation && nrGroupSeparation) {
+                    return field.get(object);
+                } else {
+                    return field.get(object).toString();
+                }
+            } else {
+                return field.get(object);
+            }
+        } catch (IllegalAccessException e) {
+            throw new CustomException("Eroare la extragerea valorilor din obiecte!", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private void addRow(List<RowDetails> rowElements) {
         if (rowElements == null || rowElements.isEmpty()) return;
         if ((this.currentRowIndex - MAXROWSHEET) == 0) {
             this.currentSheetIndex++;
@@ -335,7 +359,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         int column = 0;
         Row row = this.workbook.getSheetAt(this.currentSheetIndex).createRow(this.currentRowIndex++);
         row.setHeight(ROW_HEIGHT);
-        for (FormatObject element : rowElements) {
+        for (RowDetails element : rowElements) {
             createAndAddCell(element.getObject(), row, column++, element.getStyle());
         }
     }
@@ -473,16 +497,18 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     @Getter
     @Setter
-    class FormatObject {
+    static class RowDetails {
+        private CellStyle style;
         Object object;
-        CellStyle style;
     }
 
     @Getter
     @Setter
     class FieldOptions {
+        String fieldName;
         private CellStyle style;
         private boolean nrGroupSeparation;
+        private boolean isInComposite;
 
         private FieldOptions() {
             this.nrGroupSeparation = globalNrGroupSeparation;
