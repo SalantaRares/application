@@ -24,8 +24,9 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     //CONSTANTS
     public static final String EXPORT_LIST_NAME = "objects";
-    public static final String EXPORT_CUSTOM_ATTRIBUTES = "ATTRIBUTES_MAPPING";
-    public static final String EXPORT_SMALL_SIZE_COLUMNS = "SMALL_COLUMNS";
+    public static final String EXPORT_CUSTOM_ATTRIBUTES = "ATTRIBUTES MAPPING";
+    public static final String EXPORT_SMALL_SIZE_COLUMNS = "SMALL COLUMNS";
+    public static final String MULTIPLE_DATA_LIST = "MULTIPLE DATA LIST";
     public static final String CENTER_ALIGNMENT = "CENTER";
     public static final String LEFT_ALIGNMENT = "LEFT";
     public static final String RIGHT_ALIGNMENT = "RIGHT";
@@ -63,13 +64,14 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     //REPORT DATA OBJECTS
     private List<Object> dataList = null;
     private List<String> customAttributes = null;
+    private Map<String, List> multipleDataLists = null;
 
     //EXCEL RELATED ATTRIBUTES
     private Workbook workbook = null;
     private int sheetsNo = 0;
     private final int MAXROWSHEET = 1000000;
-    private final List<FieldOptions> referenceObjectFieldsOptions = new ArrayList<>();
-    private final List<String> header = new ArrayList<>();
+    private List<FieldOptions> referenceObjectFieldsOptions = new ArrayList<>();
+    private List<String> header = new ArrayList<>();
     private int currentRowIndex = DATA_START_ROW_INDEX;
     private int currentSheetIndex = 0;
     private static String EMPTY = "";
@@ -99,15 +101,11 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     private CellStyle headerStyle;
 
-    private short DATE_DATA_FORMAT;
-    private short DATE_TIME_DATA_FORMAT;
-    private short INTEGER_DATA_FORMAT;
-    private short BIGDECIMAL_DATA_FORMAT;
-
     private List<String> SMALL_SIZE_COLUMNS;
 
     // messages
     private final String FIELD_VALUE_EXTRACTION_ERROR = "Eroare la extragerea valorilor din obiecte!";
+    private final String DEFULT_SEET_NAME = "Sheet";
 
 
     public ExcelGenerator() {
@@ -117,14 +115,30 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         this.workbook = workbook;
         fetchDataFromInput(model);
+        initializeCellStyles();
         if (this.dataList != null && !this.dataList.isEmpty()) {
-            initializeCellStyles();
-            extractDetailsFromData();
-            generateReport();
-            workbook = this.workbook;
+            populateWorkbook(workbook, this.dataList, DEFULT_SEET_NAME);
+        } else if (this.multipleDataLists != null && !this.multipleDataLists.isEmpty()) {
+            for (Map.Entry<String, List> entry : this.multipleDataLists.entrySet()) {
+                populateWorkbook(workbook, entry.getValue(), entry.getKey());
+                resetGlobalData();
+            }
         } else {
-            workbook.createSheet("Sheet");
+            workbook.createSheet(DEFULT_SEET_NAME);
         }
+    }
+
+    private void resetGlobalData() {
+        this.header = new ArrayList<>();
+        this.referenceObjectFieldsOptions = new ArrayList<>();
+        currentSheetIndex++;
+        this.currentRowIndex = DATA_START_ROW_INDEX;
+    }
+
+    private void populateWorkbook(Workbook workbook, List dataList, String sheetName) {
+        extractDetailsFromData(dataList);
+        generateReport(dataList, sheetName);
+        workbook = this.workbook;
     }
 
     private void fetchDataFromInput(Map<String, Object> model) {
@@ -137,14 +151,15 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         } else {
             SMALL_SIZE_COLUMNS = new ArrayList<>();
         }
+
+        if (model.get(MULTIPLE_DATA_LIST) != null) {
+            multipleDataLists = (Map<String, List>) model.get(MULTIPLE_DATA_LIST);
+        }
     }
 
-    private void extractDetailsFromData() {
-        this.sheetsNo = (this.dataList.size() / MAXROWSHEET) + 1;
-        //LIST HAS ELEMENTS
-        if (this.dataList.size() > 0) {
-            setFieldsOptionsAndHeader(this.dataList.get(0).getClass().getDeclaredFields(), false);
-        }
+    private void extractDetailsFromData(List dataList) {
+        this.sheetsNo = (dataList.size() / MAXROWSHEET) + 1;
+        setFieldsOptionsAndHeader(dataList.get(0).getClass().getDeclaredFields(), false);
     }
 
     private void setFieldsOptionsAndHeader(Field[] fields, boolean isInComposite) {
@@ -155,7 +170,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                 if (!isAttributeOfInterest(field.getName())) {
                     continue;
                 }
-                setFieldsOptionsAndHeader(field, isInComposite);
+                setFieldOptionsAndHeader(field, isInComposite);
             } else {
                 setFieldsOptionsAndHeader(field.getType().getDeclaredFields(), true);
             }
@@ -166,7 +181,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         return customAttributes == null || customAttributes.isEmpty() || customAttributes.contains(fieldName);
     }
 
-    private void setFieldsOptionsAndHeader(Field field, boolean isInComposite) {
+    private void setFieldOptionsAndHeader(Field field, boolean isInComposite) {
         processFieldsOptions(field, isInComposite);
         header.add(getHeaderEntryFromField(field));
     }
@@ -301,15 +316,16 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     }
 
 
-    private void generateReport() {
+    private void generateReport(List dataList, String sheetName) {
         for (int i = 0; i < this.sheetsNo; i++) {
-            Sheet sheet = this.workbook.createSheet("Sheet" + (i + 1));
+            Sheet sheet = this.workbook.createSheet(sheetName + (i + 1));
             setHeader(sheet);
         }
-        for (Object obj : this.dataList) {
+        for (Object obj : dataList) {
             addRow(getValuesFromObject(obj));
         }
-        setColumnsWidth();
+        //setColumnsWidth();
+
     }
 
     /**
@@ -374,7 +390,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         if (rowElements == null || rowElements.isEmpty()) return;
         if ((this.currentRowIndex - MAXROWSHEET) == 0) {
             this.currentSheetIndex++;
-            setColumnsWidth();
             this.currentRowIndex = DATA_START_ROW_INDEX;
         }
 
@@ -384,6 +399,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         for (RowDetails element : rowElements) {
             createAndAddCell(element.getObject(), row, column++, element.getStyle());
         }
+        setColumnsWidth();
     }
 
     private void createAndAddCell(Object input, Row row, int column, CellStyle cellStyle) {
@@ -423,10 +439,10 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     private void initializeCellStyles() {
         CreationHelper createHelper = workbook.getCreationHelper();
-        DATE_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy ");
-        DATE_TIME_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy  h:mm:ss");
-        INTEGER_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0");
-        BIGDECIMAL_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0.00");
+        short DATE_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy ");
+        short DATE_TIME_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy  h:mm:ss");
+        short INTEGER_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0");
+        short BIGDECIMAL_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0.00");
 
         STYLE_ALIGNED_CENTER = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
         STYLE_ALIGNED_LEFT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
