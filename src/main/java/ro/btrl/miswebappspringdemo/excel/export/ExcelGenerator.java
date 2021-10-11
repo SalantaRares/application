@@ -68,7 +68,8 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     //EXCEL RELATED ATTRIBUTES
     private Workbook workbook = null;
-    private int sheetsNo = 0;
+    private final int SHEET_NAME_NO_START_INDEX = 2;
+    private int SHEET_NAME_NO = SHEET_NAME_NO_START_INDEX;
     private final int MAXROWSHEET = 1000000;
     private List<FieldOptions> referenceObjectFieldsOptions = new ArrayList<>();
     private List<String> header = new ArrayList<>();
@@ -132,11 +133,12 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         this.header = new ArrayList<>();
         this.referenceObjectFieldsOptions = new ArrayList<>();
         currentSheetIndex++;
+        SHEET_NAME_NO = SHEET_NAME_NO_START_INDEX;
         this.currentRowIndex = DATA_START_ROW_INDEX;
     }
 
     private void populateWorkbook(Workbook workbook, List dataList, String sheetName) {
-        extractDetailsFromData(dataList);
+        setFieldsOptionsAndHeader(dataList.get(0).getClass().getDeclaredFields(), false);
         generateReport(dataList, sheetName);
         workbook = this.workbook;
     }
@@ -155,11 +157,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         if (model.get(MULTIPLE_DATA_LIST) != null) {
             multipleDataLists = (Map<String, List>) model.get(MULTIPLE_DATA_LIST);
         }
-    }
-
-    private void extractDetailsFromData(List dataList) {
-        this.sheetsNo = (dataList.size() / MAXROWSHEET) + 1;
-        setFieldsOptionsAndHeader(dataList.get(0).getClass().getDeclaredFields(), false);
     }
 
     private void setFieldsOptionsAndHeader(Field[] fields, boolean isInComposite) {
@@ -317,15 +314,15 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
 
     private void generateReport(List dataList, String sheetName) {
-        for (int i = 0; i < this.sheetsNo; i++) {
-            Sheet sheet = this.workbook.createSheet(sheetName + (i + 1));
-            setHeader(sheet);
-        }
+        createSheetAndSetHeader(sheetName);
         for (Object obj : dataList) {
-            addRow(getValuesFromObject(obj));
+            addRow(getValuesFromObject(obj), sheetName);
         }
-        //setColumnsWidth();
+    }
 
+    private void createSheetAndSetHeader(String sheetName) {
+        Sheet sheet = this.workbook.createSheet(sheetName);
+        setHeader(sheet);
     }
 
     /**
@@ -386,11 +383,12 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         }
     }
 
-    private void addRow(List<RowDetails> rowElements) {
+    private void addRow(List<RowDetails> rowElements, String sheetName) {
         if (rowElements == null || rowElements.isEmpty()) return;
         if ((this.currentRowIndex - MAXROWSHEET) == 0) {
             this.currentSheetIndex++;
             this.currentRowIndex = DATA_START_ROW_INDEX;
+            createSheetAndSetHeader(sheetName + (SHEET_NAME_NO++));
         }
 
         int column = 0;
