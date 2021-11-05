@@ -53,4 +53,20 @@ public class ExcelController {
         model.put(ExcelGenerator.EXPORT_SMALL_SIZE_COLUMNS, new ArrayList<>(Arrays.asList("ATTRIBUTE STRING", "DATA HIST", "HIST DATE", "CIF", "CIF CLIENT", "CATEGORIE CLIENT", "COD PRODUS", "DATA DESCHIDERE", "DATA INCHIDERE", "ID UNIT", "ID SUCU", "ID SUCURSALA")));
         return new ModelAndView(new ExcelGenerator(), model);
     }
+
+
+    @GetMapping("/exports/multiple-lists/exceptions")
+    private ModelAndView getExportExcelMultipleListsEx() {
+        Map<String, Object> model = new HashMap<>();
+        Map<String, List> multipleList = new HashMap<>();
+        List l= new ArrayList();
+        l.add(new ExportClassExample());
+        multipleList.put("test1 shhet", DataGenerator.generatePopulatedObjects(ExportClassExample.class, 0));
+        multipleList.put("test2 shhet", DataGenerator.generatePopulatedObjects(IdExportClassExample.class, 10));
+        multipleList.put("test3 shhet", null);
+        multipleList.put("test4 shhet", l);
+        model.put(ExcelGenerator.MULTIPLE_DATA_LIST, multipleList);
+        model.put(ExcelGenerator.EXPORT_LIST_NAME, DataGenerator.generatePopulatedObjects(ExportClassExample.class, 0));
+        return new ModelAndView(new ExcelGenerator(), model);
+    }
 }

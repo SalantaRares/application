@@ -138,7 +138,9 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     }
 
     private void populateWorkbook(Workbook workbook, List dataList, String sheetName) {
-        setFieldsOptionsAndHeader(dataList.get(0).getClass().getDeclaredFields(), false);
+        if(dataList!= null && !dataList.isEmpty()) {
+            setFieldsOptionsAndHeader(dataList.get(0).getClass().getDeclaredFields(), false);
+        }
         generateReport(dataList, sheetName);
         workbook = this.workbook;
     }
@@ -315,8 +317,10 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     private void generateReport(List dataList, String sheetName) {
         createSheetAndSetHeader(sheetName);
-        for (Object obj : dataList) {
-            addRow(getValuesFromObject(obj), sheetName);
+        if(dataList!= null) {
+            for (Object obj : dataList) {
+                addRow(getValuesFromObject(obj), sheetName);
+            }
         }
     }
 
@@ -340,7 +344,11 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
             try {
                 if (fieldOptions.isInComposite) {
                     Object composite = getCompositeIdFromOject(object);
-                    rowValue.setObject(getObjectValueByField(composite.getClass().getDeclaredField(fieldOptions.fieldName), composite, fieldOptions.isNrGroupSeparation()));
+                    if(composite!= null) {
+                        rowValue.setObject(getObjectValueByField(composite.getClass().getDeclaredField(fieldOptions.fieldName), composite, fieldOptions.isNrGroupSeparation()));
+                    }else {
+                        rowValue.setObject(null);
+                    }
                 } else {
                     rowValue.setObject(getObjectValueByField(object.getClass().getDeclaredField(fieldOptions.fieldName), object, fieldOptions.isNrGroupSeparation()));
                 }
