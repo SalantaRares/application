@@ -66,7 +66,6 @@ public class ExcelController {
         multipleList.put("test3 shhet", null);
         multipleList.put("test4 shhet", l);
         model.put(ExcelGenerator.MULTIPLE_DATA_LIST, multipleList);
-        model.put(ExcelGenerator.EXPORT_LIST_NAME, DataGenerator.generatePopulatedObjects(ExportClassExample.class, 0));
-        return new ModelAndView(new ExcelGenerator(), model);
+       return new ModelAndView(new ExcelGenerator(), model);
     }
 }
