@@ -38,75 +38,75 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     public static final int BIGDECIMAL_DATA_FORMAT_STYLE = 4;
     public static final int DATE_TIME_DATA_FORMAT_STYLE = 5;
 
-    private final String COMPOSED_ID_ANNOTATION = javax.persistence.EmbeddedId.class.getName();
-    private final String EXCEL_IGNORED_PARAMETER_ANNOTATION = ExcelIgnoreParam.class.getName();
-    private final String EXCEL_CUSTOM_COLUMN_NAME_ANNOTATION = ExcelCustomColumnName.class.getName();
-    private final Class<ExcelFormatOptions> EXCEL_FORMAT_OPTIONS_ANNOTATION = ExcelFormatOptions.class;
+    protected final String COMPOSED_ID_ANNOTATION = javax.persistence.EmbeddedId.class.getName();
+    protected final String EXCEL_IGNORED_PARAMETER_ANNOTATION = ExcelIgnoreParam.class.getName();
+    protected final String EXCEL_CUSTOM_COLUMN_NAME_ANNOTATION = ExcelCustomColumnName.class.getName();
+    protected final Class<ExcelFormatOptions> EXCEL_FORMAT_OPTIONS_ANNOTATION = ExcelFormatOptions.class;
 
-    private final short HEIGHT_FACTOR = 20;
-    private final short HEADER_ROW_HEIGHT = 32 * HEIGHT_FACTOR;
-    private final short ROW_HEIGHT = 15 * HEIGHT_FACTOR;
+    protected final short HEIGHT_FACTOR = 20;
+    protected final short HEADER_ROW_HEIGHT = 32 * HEIGHT_FACTOR;
+    protected final short ROW_HEIGHT = 15 * HEIGHT_FACTOR;
 
-    private final short WIDTH_FACTOR = 263;
-    private final short DEFAULT_COLUMN_WIDTH = 30 * WIDTH_FACTOR;
-    private final short SMALL_COLUMN_WIDTH = 11 * WIDTH_FACTOR;
+    protected final short WIDTH_FACTOR = 263;
+    protected final short DEFAULT_COLUMN_WIDTH = 30 * WIDTH_FACTOR;
+    protected final short SMALL_COLUMN_WIDTH = 11 * WIDTH_FACTOR;
 
 
-    private final int HEADER_ROW_INDEX = 0;
-    private final int DATA_START_ROW_INDEX = 1;
+    protected final int HEADER_ROW_INDEX = 0;
+    protected final int DATA_START_ROW_INDEX = 1;
 
-    private final HorizontalAlignment ALIGN_CENTER = HorizontalAlignment.CENTER;
-    private final VerticalAlignment ALIGN_CENTER_VERTICAL = VerticalAlignment.CENTER;
-    private final HorizontalAlignment ALIGN_LEFT = HorizontalAlignment.LEFT;
-    private final HorizontalAlignment ALIGN_RIGHT = HorizontalAlignment.RIGHT;
+    protected final HorizontalAlignment ALIGN_CENTER = HorizontalAlignment.CENTER;
+    protected final VerticalAlignment ALIGN_CENTER_VERTICAL = VerticalAlignment.CENTER;
+    protected final HorizontalAlignment ALIGN_LEFT = HorizontalAlignment.LEFT;
+    protected final HorizontalAlignment ALIGN_RIGHT = HorizontalAlignment.RIGHT;
 
 
     //REPORT DATA OBJECTS
-    private List<Object> dataList = null;
-    private List<String> customAttributes = null;
-    private Map<String, List> multipleDataLists = null;
+    protected List<Object> dataList = null;
+    protected List<String> customAttributes = null;
+    protected Map<String, List> multipleDataLists = null;
 
     //EXCEL RELATED ATTRIBUTES
-    private Workbook workbook = null;
-    private final int SHEET_NAME_NO_START_INDEX = 2;
-    private int SHEET_NAME_NO = SHEET_NAME_NO_START_INDEX;
-    private final int MAXROWSHEET = 1000000;
-    private List<FieldOptions> referenceObjectFieldsOptions = new ArrayList<>();
-    private List<String> header = new ArrayList<>();
-    private int currentRowIndex = DATA_START_ROW_INDEX;
-    private int currentSheetIndex = 0;
-    private static String EMPTY = "";
+    protected Workbook workbook = null;
+    protected final int SHEET_NAME_NO_START_INDEX = 2;
+    protected int SHEET_NAME_NO = SHEET_NAME_NO_START_INDEX;
+    protected final int MAXROWSHEET = 1000000;
+    protected List<FieldOptions> referenceObjectFieldsOptions = new ArrayList<>();
+    protected List<String> header = new ArrayList<>();
+    protected int currentRowIndex = DATA_START_ROW_INDEX;
+    protected int currentSheetIndex = 0;
+    protected static String EMPTY = "";
 
-    private boolean globalNrGroupSeparation = true;
+    protected boolean globalNrGroupSeparation = true;
 
-    private CellStyle STYLE_ALIGNED_CENTER;
-    private CellStyle STYLE_ALIGNED_LEFT;
-    private CellStyle STYLE_ALIGNED_RIGHT;
+    protected CellStyle STYLE_ALIGNED_CENTER;
+    protected CellStyle STYLE_ALIGNED_LEFT;
+    protected CellStyle STYLE_ALIGNED_RIGHT;
 
-    private CellStyle STYLE_ALIGNED_CENTER_DATE_FORMAT;
-    private CellStyle STYLE_ALIGNED_LEFT_DATE_FORMAT;
-    private CellStyle STYLE_ALIGNED_RIGHT_DATE_FORMAT;
+    protected CellStyle STYLE_ALIGNED_CENTER_DATE_FORMAT;
+    protected CellStyle STYLE_ALIGNED_LEFT_DATE_FORMAT;
+    protected CellStyle STYLE_ALIGNED_RIGHT_DATE_FORMAT;
 
-    private CellStyle STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT;
-    private CellStyle STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT;
-    private CellStyle STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT;
+    protected CellStyle STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT;
+    protected CellStyle STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT;
+    protected CellStyle STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT;
 
-    private CellStyle STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT;
-    private CellStyle STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT;
-    private CellStyle STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT;
+    protected CellStyle STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT;
+    protected CellStyle STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT;
+    protected CellStyle STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT;
 
-    private CellStyle STYLE_ALIGNED_CENTER_INTEGER_FORMAT;
-    private CellStyle STYLE_ALIGNED_LEFT_INTEGER_FORMAT;
-    private CellStyle STYLE_ALIGNED_RIGHT_INTEGER_FORMAT;
+    protected CellStyle STYLE_ALIGNED_CENTER_INTEGER_FORMAT;
+    protected CellStyle STYLE_ALIGNED_LEFT_INTEGER_FORMAT;
+    protected CellStyle STYLE_ALIGNED_RIGHT_INTEGER_FORMAT;
 
 
-    private CellStyle headerStyle;
+    protected CellStyle headerStyle;
 
-    private List<String> SMALL_SIZE_COLUMNS;
+    protected List<String> SMALL_SIZE_COLUMNS;
 
     // messages
-    private final String FIELD_VALUE_EXTRACTION_ERROR = "Eroare la extragerea valorilor din obiecte!";
-    private final String DEFULT_SEET_NAME = "Sheet";
+    protected final String FIELD_VALUE_EXTRACTION_ERROR = "Eroare la extragerea valorilor din obiecte!";
+    protected final String DEFULT_SEET_NAME = "Sheet";
 
 
     public ExcelGenerator() {
