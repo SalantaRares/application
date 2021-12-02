@@ -31,6 +31,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     public static final String LEFT_ALIGNMENT = "LEFT";
     public static final String RIGHT_ALIGNMENT = "RIGHT";
 
+    public static final int CUSTOM_DATA_FORMAT_STYLE = -1;
     public static final int DEFAULT_DATA_FORMAT_STYLE = 0;
     public static final int STRING_DATA_FORMAT_STYLE = 1;
     public static final int DATE_DATA_FORMAT_STYLE = 2;
@@ -79,27 +80,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
 
     protected boolean globalNrGroupSeparation = true;
 
-    protected CellStyle STYLE_ALIGNED_CENTER;
-    protected CellStyle STYLE_ALIGNED_LEFT;
-    protected CellStyle STYLE_ALIGNED_RIGHT;
-
-    protected CellStyle STYLE_ALIGNED_CENTER_DATE_FORMAT;
-    protected CellStyle STYLE_ALIGNED_LEFT_DATE_FORMAT;
-    protected CellStyle STYLE_ALIGNED_RIGHT_DATE_FORMAT;
-
-    protected CellStyle STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT;
-    protected CellStyle STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT;
-    protected CellStyle STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT;
-
-    protected CellStyle STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT;
-    protected CellStyle STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT;
-    protected CellStyle STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT;
-
-    protected CellStyle STYLE_ALIGNED_CENTER_INTEGER_FORMAT;
-    protected CellStyle STYLE_ALIGNED_LEFT_INTEGER_FORMAT;
-    protected CellStyle STYLE_ALIGNED_RIGHT_INTEGER_FORMAT;
-
-
     protected CellStyle headerStyle;
 
     protected List<String> SMALL_SIZE_COLUMNS;
@@ -107,6 +87,11 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     // messages
     protected final String FIELD_VALUE_EXTRACTION_ERROR = "Eroare la extragerea valorilor din obiecte!";
     protected final String DEFULT_SEET_NAME = "Sheet";
+
+    private final String DATE_DATA_FORMAT = "dd/mm/yyyy ";
+    private final String DATE_TIME_DATA_FORMAT = "dd/mm/yyyy  h:mm:ss";
+    private final String INTEGER_DATA_FORMAT = "#,##0";
+    private final String BIGDECIMAL_DATA_FORMAT = "#,##0.00";
 
 
     public ExcelGenerator() {
@@ -138,7 +123,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     }
 
     private void populateWorkbook(Workbook workbook, List dataList, String sheetName) {
-        if(dataList!= null && !dataList.isEmpty()) {
+        if (dataList != null && !dataList.isEmpty()) {
             setFieldsOptionsAndHeader(dataList.get(0).getClass().getDeclaredFields(), false);
         }
         generateReport(dataList, sheetName);
@@ -210,9 +195,11 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                 fieldOptions.setStyle(getAlignedDateTimeStyle(alignment));
             } else if (excelFormatOptions.format() == INTEGER_DATA_FORMAT_STYLE) {
                 fieldOptions.setStyle(getAlignedIntegerStyle(alignment));
+            }else if (excelFormatOptions.format() == CUSTOM_DATA_FORMAT_STYLE && !excelFormatOptions.customFormatStyle().isEmpty()) {
+                fieldOptions.setStyle(getAlignedSimpleStyle(alignment, excelFormatOptions.customFormatStyle()));
             } else {
                 fieldOptions.setNrGroupSeparation(false);
-                fieldOptions.setStyle(getAlignedSimpleStyle(alignment));
+                fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
             }
         } else {
             if (objectType.isPrimitive()) {
@@ -222,14 +209,14 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                     } else if (objectType.equals(short.class) || objectType.equals(int.class) || objectType.equals(long.class)) {
                         fieldOptions.setStyle(getAlignedIntegerStyle(alignment));
                     } else {
-                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment));
+                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
                     }
                 } else {
                     if (objectType.equals(double.class) || objectType.equals(float.class)
                             || objectType.equals(short.class) || objectType.equals(int.class) || objectType.equals(long.class)) {
-                        fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment));
+                        fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment,null ));
                     } else {
-                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment));
+                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
                     }
                 }
             } else if (objectType.getSuperclass().equals(Number.class)) {
@@ -240,84 +227,88 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                         fieldOptions.setStyle(getAlignedBigDecimalStyle(alignment));
                     }
                 } else {
-                    fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment));
+                    fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment,null ));
                 }
 
             } else if (objectType.equals(Date.class)) {
                 fieldOptions.setStyle(getAlignedDateStyle(alignment));
             } else {
-                fieldOptions.setStyle(getAlignedSimpleStyle(alignment));
+                fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
             }
         }
         return fieldOptions;
     }
 
 
-    private CellStyle getAlignedSimpleStyle(String alignment) {
-        if (alignment != null && alignment.equals(RIGHT_ALIGNMENT)) {
-            return STYLE_ALIGNED_RIGHT;
-        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
-            return STYLE_ALIGNED_LEFT;
-        } else {
-            return STYLE_ALIGNED_CENTER;
+    private CellStyle getAlignedSimpleStyle(String alignment, String format) {
+        if (alignment == null || alignment.isEmpty()) {
+            alignment = CENTER_ALIGNMENT;
         }
+        return getAlignedStyle(alignment, format);
     }
 
-    private CellStyle getAlignedSimpleNumberStyle(String alignment) {
-        if (alignment != null && alignment.equals(CENTER_ALIGNMENT)) {
-            return STYLE_ALIGNED_CENTER;
-        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
-            return STYLE_ALIGNED_LEFT;
-        } else {
-            return STYLE_ALIGNED_RIGHT;
+    private CellStyle getAlignedSimpleNumberStyle(String alignment, String format) {
+        if (alignment == null || alignment.isEmpty()) {
+            alignment = RIGHT_ALIGNMENT;
         }
+        return getAlignedStyle(alignment, format);
     }
 
     private CellStyle getAlignedBigDecimalStyle(String alignment) {
-        if (alignment != null && alignment.equals(CENTER_ALIGNMENT)) {
-            return STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT;
-        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
-            return STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT;
-        } else {
-            return STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT;
+        if (alignment == null || alignment.isEmpty()) {
+            alignment = RIGHT_ALIGNMENT;
         }
+        return getAlignedStyle(alignment, BIGDECIMAL_DATA_FORMAT);
     }
 
     private CellStyle getAlignedIntegerStyle(String alignment) {
-        if (alignment != null && alignment.equals(CENTER_ALIGNMENT)) {
-            return STYLE_ALIGNED_CENTER_INTEGER_FORMAT;
-        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
-            return STYLE_ALIGNED_LEFT_INTEGER_FORMAT;
-        } else {
-            return STYLE_ALIGNED_RIGHT_INTEGER_FORMAT;
+        if (alignment == null || alignment.isEmpty()) {
+            alignment = RIGHT_ALIGNMENT;
         }
+        return getAlignedStyle(alignment, INTEGER_DATA_FORMAT);
     }
 
 
     private CellStyle getAlignedDateStyle(String alignment) {
-        if (alignment != null && alignment.equals(RIGHT_ALIGNMENT)) {
-            return STYLE_ALIGNED_RIGHT_DATE_FORMAT;
-        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
-            return STYLE_ALIGNED_LEFT_DATE_FORMAT;
-        } else {
-            return STYLE_ALIGNED_CENTER_DATE_FORMAT;
+        if (alignment == null || alignment.isEmpty()) {
+            alignment = CENTER_ALIGNMENT;
         }
+        return getAlignedStyle(alignment, DATE_DATA_FORMAT);
     }
 
     private CellStyle getAlignedDateTimeStyle(String alignment) {
-        if (alignment != null && alignment.equals(RIGHT_ALIGNMENT)) {
-            return STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT;
-        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
-            return STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT;
-        } else {
-            return STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT;
+        if (alignment == null || alignment.isEmpty()) {
+            alignment = CENTER_ALIGNMENT;
         }
+        return getAlignedStyle(alignment, DATE_TIME_DATA_FORMAT);
+    }
+
+    private CellStyle getAlignedStyle(String alignment, String formatStyle) {
+        Short format;
+        if (formatStyle == null) {
+            format = null;
+        } else {
+            format = workbook.getCreationHelper().createDataFormat().getFormat(formatStyle);
+        }
+        if (alignment != null && alignment.equals(RIGHT_ALIGNMENT)) {
+            return createCellStyle(format, ALIGN_RIGHT);
+        } else if (alignment != null && alignment.equals(LEFT_ALIGNMENT)) {
+            return createCellStyle(format, ALIGN_LEFT);
+        } else {
+            return createCellStyle(format, ALIGN_CENTER);
+        }
+    }
+
+    private CellStyle createCellStyle(Short format, HorizontalAlignment alignment) {
+        CellStyle style = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, alignment, ALIGN_CENTER_VERTICAL);
+        if (format != null) style.setDataFormat(format);
+        return style;
     }
 
 
     private void generateReport(List dataList, String sheetName) {
         createSheetAndSetHeader(sheetName);
-        if(dataList!= null) {
+        if (dataList != null) {
             for (Object obj : dataList) {
                 addRow(getValuesFromObject(obj), sheetName);
             }
@@ -344,9 +335,9 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
             try {
                 if (fieldOptions.isInComposite) {
                     Object composite = getCompositeIdFromOject(object);
-                    if(composite!= null) {
+                    if (composite != null) {
                         rowValue.setObject(getObjectValueByField(composite.getClass().getDeclaredField(fieldOptions.fieldName), composite, fieldOptions.isNrGroupSeparation()));
-                    }else {
+                    } else {
                         rowValue.setObject(null);
                     }
                 } else {
@@ -444,45 +435,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     }
 
     private void initializeCellStyles() {
-        CreationHelper createHelper = workbook.getCreationHelper();
-        short DATE_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy ");
-        short DATE_TIME_DATA_FORMAT = createHelper.createDataFormat().getFormat("dd/mm/yyyy  h:mm:ss");
-        short INTEGER_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0");
-        short BIGDECIMAL_DATA_FORMAT = createHelper.createDataFormat().getFormat("#,##0.00");
-
-        STYLE_ALIGNED_CENTER = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_LEFT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_RIGHT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
-
-        STYLE_ALIGNED_CENTER_DATE_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_CENTER_DATE_FORMAT.setDataFormat(DATE_DATA_FORMAT);
-        STYLE_ALIGNED_LEFT_DATE_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_LEFT_DATE_FORMAT.setDataFormat(DATE_DATA_FORMAT);
-        STYLE_ALIGNED_RIGHT_DATE_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_RIGHT_DATE_FORMAT.setDataFormat(DATE_DATA_FORMAT);
-
-
-        STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_CENTER_BIGDECIMAL_FORMAT.setDataFormat(BIGDECIMAL_DATA_FORMAT);
-        STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_LEFT_BIGDECIMAL_FORMAT.setDataFormat(BIGDECIMAL_DATA_FORMAT);
-        STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_RIGHT_BIGDECIMAL_FORMAT.setDataFormat(BIGDECIMAL_DATA_FORMAT);
-
-        STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_CENTER_DATE_TIME_FORMAT.setDataFormat(DATE_TIME_DATA_FORMAT);
-        STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_LEFT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_LEFT_DATE_TIME_FORMAT.setDataFormat(DATE_TIME_DATA_FORMAT);
-        STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.WHITE.getIndex(), false, false, ALIGN_RIGHT, ALIGN_CENTER_VERTICAL);
-        STYLE_ALIGNED_RIGHT_DATE_TIME_FORMAT.setDataFormat(DATE_TIME_DATA_FORMAT);
-
-        STYLE_ALIGNED_CENTER_INTEGER_FORMAT = STYLE_ALIGNED_CENTER;
-        STYLE_ALIGNED_CENTER_INTEGER_FORMAT.setDataFormat(INTEGER_DATA_FORMAT);
-        STYLE_ALIGNED_LEFT_INTEGER_FORMAT = STYLE_ALIGNED_LEFT;
-        STYLE_ALIGNED_LEFT_INTEGER_FORMAT.setDataFormat(INTEGER_DATA_FORMAT);
-        STYLE_ALIGNED_RIGHT_INTEGER_FORMAT = STYLE_ALIGNED_RIGHT;
-        STYLE_ALIGNED_RIGHT_INTEGER_FORMAT.setDataFormat(INTEGER_DATA_FORMAT);
-
         headerStyle = ExcelUtils.createFormat(this.workbook, (short) 11, IndexedColors.GREY_25_PERCENT.getIndex(), false, true, ALIGN_CENTER, ALIGN_CENTER_VERTICAL);
     }
 

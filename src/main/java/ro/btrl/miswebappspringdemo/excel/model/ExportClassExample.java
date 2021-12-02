@@ -7,6 +7,7 @@ import ro.btrl.miswebappspringdemo.excel.export.annotations.ExcelFormatOptions;
 import ro.btrl.miswebappspringdemo.excel.export.annotations.ExcelIgnoreParam;
 
 import javax.persistence.EmbeddedId;
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -36,4 +37,6 @@ public class ExportClassExample {
     @ExcelFormatOptions(nrGroupSeparation = false)
     double attributeFifteenDouble;
     Boolean attributeSixteenBoolean;
+    @ExcelFormatOptions(format = ExcelGenerator.CUSTOM_DATA_FORMAT_STYLE, customFormatStyle ="###,###,###,##0.00%", alignment = ExcelGenerator.RIGHT_ALIGNMENT)
+    BigDecimal attributeSeventeenBigDecimal;
 }

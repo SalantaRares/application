@@ -10,4 +10,5 @@ public @interface ExcelFormatOptions {
     boolean nrGroupSeparation() default true;
     String alignment() default "";
     int format() default ExcelGenerator.DEFAULT_DATA_FORMAT_STYLE;
+    String customFormatStyle() default "";
 }
