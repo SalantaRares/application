@@ -481,6 +481,10 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         return annotation.name();
     }
 
+    public Workbook getWorkbook() {
+        return workbook;
+    }
+
     public void setGlobalNrGroupSeparation(boolean globalNrGroupSeparation) {
         this.globalNrGroupSeparation = globalNrGroupSeparation;
     }
