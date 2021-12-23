@@ -1,14 +1,24 @@
 package ro.btrl.miswebappspringdemo.excel.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import ro.btrl.miswebappspringdemo.excel.export.ExcelGenerator;
+import ro.btrl.miswebappspringdemo.excel.model.ExcelParseExample;
+import ro.btrl.miswebappspringdemo.excel.model.ExcelParserExample2;
 import ro.btrl.miswebappspringdemo.excel.model.ExportClassExample;
 import ro.btrl.miswebappspringdemo.excel.model.IdExportClassExample;
+import ro.btrl.miswebappspringdemo.excel.parse.ExcelParser;
 import ro.btrl.miswebappspringdemo.utils.DataGenerator;
 
+import java.io.IOException;
+import java.security.Principal;
 import java.util.*;
 
 
@@ -59,13 +69,28 @@ public class ExcelController {
     private ModelAndView getExportExcelMultipleListsEx() {
         Map<String, Object> model = new HashMap<>();
         Map<String, List> multipleList = new HashMap<>();
-        List l= new ArrayList();
+        List l = new ArrayList();
         l.add(new ExportClassExample());
         multipleList.put("test1 shhet", DataGenerator.generatePopulatedObjects(ExportClassExample.class, 0));
         multipleList.put("test2 shhet", DataGenerator.generatePopulatedObjects(IdExportClassExample.class, 10));
         multipleList.put("test3 shhet", null);
         multipleList.put("test4 shhet", l);
         model.put(ExcelGenerator.MULTIPLE_DATA_LIST, multipleList);
-       return new ModelAndView(new ExcelGenerator(), model);
+        return new ModelAndView(new ExcelGenerator(), model);
+    }
+
+
+    @PostMapping(value = "/parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity parseExcel(MultipartFile file) throws IOException {
+        ExcelParser excelParser = new ExcelParser(file);
+        final List data = excelParser.getData(ExcelParseExample.class);
+        return ResponseEntity.status(HttpStatus.OK).body(data);
+    }
+
+    @PostMapping(value = "/parse2", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity parseExcel2(MultipartFile file) throws IOException {
+        ExcelParser excelParser = new ExcelParser(file);
+        final List data = excelParser.getData(ExcelParserExample2.class);
+        return ResponseEntity.status(HttpStatus.OK).body(data);
     }
 }
