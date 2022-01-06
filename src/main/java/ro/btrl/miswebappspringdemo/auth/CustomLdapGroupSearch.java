@@ -37,7 +37,11 @@ public class CustomLdapGroupSearch {
             this.groups = new HashSet<>();
             this.alreadySearchedGroups = new HashSet<>();
             for (String group : groups) {
-                findGroupAndMembers(group);
+                if (isUser(group)) {
+                    this.groups.add(group);
+                } else {
+                    findGroupAndMembers(group);
+                }
             }
             this.securityMap.put(groups, new ArrayList(Arrays.asList(this.groups.toArray())));
         }
@@ -77,6 +81,19 @@ public class CustomLdapGroupSearch {
             return distinguishedname.get(0);
         }
         return null;
+    }
+
+    public boolean isUser(String name) {
+        LdapQuery query = query()
+                .searchScope(SearchScope.SUBTREE)
+                .timeLimit(THREE_SECONDS)
+                .base(ldapSearchBase)
+                .filter("(&(objectClass=user)(objectCategory=person)(samaccountname=" + name + "))");
+        final List<String> samaccountnameList = template.search(query, new SimpleAttributesMapper("samaccountname"));
+        if (samaccountnameList != null && !samaccountnameList.isEmpty()) {
+            return true;
+        }
+        return false;
     }
 
     private class SimpleAttributesMapper implements AttributesMapper<String> {
