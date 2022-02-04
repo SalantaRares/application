@@ -37,17 +37,6 @@ public class UtilsRepository {
         }
     }
 
-    public static List getDataAsListByAliasBean(SessionFactory sessionFactory, String query, Class type) {
-        try {
-            Query q = sessionFactory.getCurrentSession().createNativeQuery(query);
-            ResultTransformer aliasToBean = CustomTransformers.aliasToBean(type);
-            return q.setResultTransformer(aliasToBean).list();
-        } catch (Exception e) {
-            throwDatabaseException(e.getMessage());
-            return null;
-        }
-    }
-
     public static void createOrUpdate(SessionFactory sessionFactory, Object object) {
         try {
             sessionFactory.getCurrentSession().saveOrUpdate(object);
