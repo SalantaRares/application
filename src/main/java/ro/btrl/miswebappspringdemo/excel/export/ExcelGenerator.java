@@ -12,8 +12,11 @@ import ro.btrl.miswebappspringdemo.exceptions.CustomException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -370,14 +373,27 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
             field.setAccessible(true);
             if (field.get(object) instanceof Number) {
                 if (globalNrGroupSeparation && nrGroupSeparation) {
-                    return field.get(object);
+                    return getValue(field,object);
                 } else {
-                    return field.get(object).toString();
+                    return getValue(field,object).toString();
                 }
             } else {
-                return field.get(object);
+                return getValue(field,object);
             }
         } catch (IllegalAccessException e) {
+            throw new CustomException(FIELD_VALUE_EXTRACTION_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private Object getValue(Field field, Object object) {
+        try {
+            try {
+                return new PropertyDescriptor(field.getName(), object.getClass()).getReadMethod().invoke(object);
+            } catch (InvocationTargetException | IntrospectionException e) {
+                field.setAccessible(true);
+                return field.get(object);
+            }
+        } catch (IllegalAccessException ex) {
             throw new CustomException(FIELD_VALUE_EXTRACTION_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

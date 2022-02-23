@@ -10,61 +10,19 @@ import ro.btrl.miswebappspringdemo.exceptions.CustomException;
 import ro.btrl.miswebappspringdemo.utils.hibernate.CustomParameter;
 import ro.btrl.miswebappspringdemo.utils.hibernate.CustomTransformers;
 
+import javax.persistence.NoResultException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
-/**
- * @author Marius Pop
- * @since 30/October/2019
- */
+
 public class UtilsRepository {
-
-
-    public static List getDataAsList(SessionFactory sessionFactory, String query) {
-        try {
-            Query query2 = sessionFactory.getCurrentSession().createNativeQuery(query);
-            return query2.list();
-        } catch (javax.persistence.QueryTimeoutException e) {
-            throwTimeoutException("");
-            return null;
-        } catch (Exception e) {
-            throwDatabaseException(e.getMessage());
-            return null;
-        }
-    }
-
-
-    public static List getDataAsListByAliasBean(SessionFactory sessionFactory, String query, Class type) {
-        try {
-            Query q = sessionFactory.getCurrentSession().createNativeQuery(query);
-            ResultTransformer aliasToBean = CustomTransformers.aliasToBean(type);
-            return q.setResultTransformer(aliasToBean).list();
-        } catch (javax.persistence.QueryTimeoutException e) {
-            throwTimeoutException("");
-            return null;
-        } catch (Exception e) {
-            throwDatabaseException(e.getMessage());
-            return null;
-        }
-    }
-
+    private static final int QUERY_TIMEOUT=240;
 
     public static Object getObjectById(SessionFactory sessionFactory, Class objectType, Object id) {
         try {
             return sessionFactory.getCurrentSession().get(objectType, (Serializable) id);
-        } catch (Exception e) {
-            throwDatabaseException(e.getMessage());
-            return null;
-        }
-    }
-
-    public static BigDecimal getNextValue(SessionFactory sessionFactory, String query) {
-        try {
-            Session session = sessionFactory.getCurrentSession();
-            Query q = session.createNativeQuery(query);
-            return (BigDecimal) q.getSingleResult();
         } catch (Exception e) {
             throwDatabaseException(e.getMessage());
             return null;
@@ -79,7 +37,16 @@ public class UtilsRepository {
             throwDatabaseException(e.getMessage());
         }
     }
-
+    public static List getDataAsListByAliasBean(SessionFactory sessionFactory, String query, Class type) {
+        try {
+            Query q = sessionFactory.getCurrentSession().createNativeQuery(query).setTimeout(QUERY_TIMEOUT);
+            ResultTransformer aliasToBean = CustomTransformers.aliasToBean(type);
+            return q.setResultTransformer(aliasToBean).list();
+        } catch (Exception e) {
+            throwDatabaseException(e.getMessage());
+            return null;
+        }
+    }
     public static void createOrUpdate(SessionFactory sessionFactory, Object object) {
         try {
             sessionFactory.getCurrentSession().saveOrUpdate(object);
@@ -106,43 +73,66 @@ public class UtilsRepository {
         }
     }
 
-
-    public static List getDataAsListByAliasBeanWithParams(SessionFactory sessionFactory, String query, Class type,
-                                                          List<CustomParameter> parameterList) {
+    public static Object getObjectByAliasBeanWithParams(SessionFactory sessionFactory, String query, Class type,
+                                                        List<CustomParameter> parameterList) throws CustomException {
         try {
-            Query q = sessionFactory.getCurrentSession().createNativeQuery(query);
-            if (parameterList != null & parameterList.size() > 0) {
-                for (CustomParameter param : parameterList) {
-                    if (param.getValue() != null) {
-                        q.setParameter(param.getName(), param.getValue());
-                    } else {
-                        if (param.getObjectClass() != null) {
-                            if (param.getObjectClass() == Date.class) {
-                                q.setParameter(param.getName(), param.getValue(), StandardBasicTypes.DATE);
-                            }
-                            if (param.getObjectClass() == String.class) {
-                                q.setParameter(param.getName(), param.getValue(), StandardBasicTypes.STRING);
-                            }
-                        } else {
-                            q.setParameter(param.getName(), param.getValue());
-                        }
-                    }
-                }
-            }
+            Query q = createQueryWithparams(sessionFactory, query, parameterList).setTimeout(QUERY_TIMEOUT);
             ResultTransformer aliasToBean = CustomTransformers.aliasToBean(type);
-            return q.setResultTransformer(aliasToBean).list();
+            return q.setResultTransformer(aliasToBean).getSingleResult();
         } catch (javax.persistence.QueryTimeoutException e) {
-            throwTimeoutException("");
+            e.printStackTrace();
+            throw e;
+        } catch (NullPointerException | NoResultException e) {
             return null;
         } catch (Exception e) {
-            throwDatabaseException(e.getMessage());
+            if (e.getMessage().contains("transaction timeout expired")) {
+                throwTimeoutException(Messages.TO_MUCH_DATA_TIMEOUT);
+            } else {
+                throwDatabaseException(e.getMessage());
+            }
             return null;
         }
     }
 
     public static void executeWithParameters(SessionFactory sessionFactory, String statement, List<CustomParameter> parameterList) {
-        Query q = sessionFactory.getCurrentSession().createNativeQuery(statement);
-        if (parameterList != null & parameterList.size() > 0) {
+        Query q = createQueryWithparams(sessionFactory, statement, parameterList).setTimeout(QUERY_TIMEOUT);
+        try {
+            q.executeUpdate();
+        } catch (javax.persistence.QueryTimeoutException e) {
+            throwTimeoutException(Messages.TO_MUCH_DATA_TIMEOUT);
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (e.getMessage().contains("transaction timeout expired")) {
+                throwTimeoutException(Messages.TO_MUCH_DATA_TIMEOUT);
+            } else {
+                throwDatabaseException(e.getMessage());
+            }
+        }
+    }
+
+
+    public static List getDataAsListByAliasBeanWithParams(SessionFactory sessionFactory, String query, Class type,
+                                                          List<CustomParameter> parameterList) {
+        try {
+            Query q = createQueryWithparams(sessionFactory, query, parameterList).setTimeout(QUERY_TIMEOUT);
+            ResultTransformer aliasToBean = CustomTransformers.aliasToBean(type);
+            return q.setResultTransformer(aliasToBean).list();
+        } catch (javax.persistence.QueryTimeoutException e) {
+            throwTimeoutException(Messages.TO_MUCH_DATA_TIMEOUT);
+        } catch (Exception e) {
+            if (e.getMessage().contains("transaction timeout expired")) {
+                throwTimeoutException(Messages.TO_MUCH_DATA_TIMEOUT);
+            } else {
+                throwDatabaseException(e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    private static Query createQueryWithparams(SessionFactory sessionFactory, String query,
+                                               List<CustomParameter> parameterList) {
+        Query q = sessionFactory.getCurrentSession().createNativeQuery(query);
+        if (parameterList != null && parameterList.size() > 0) {
             for (CustomParameter param : parameterList) {
                 if (param.getValue() != null) {
                     q.setParameter(param.getName(), param.getValue());
@@ -150,6 +140,15 @@ public class UtilsRepository {
                     if (param.getObjectClass() != null) {
                         if (param.getObjectClass() == Date.class) {
                             q.setParameter(param.getName(), param.getValue(), StandardBasicTypes.DATE);
+                        }
+                        if (param.getObjectClass() == BigDecimal.class) {
+                            q.setParameter(param.getName(), param.getValue(), StandardBasicTypes.BIG_DECIMAL);
+                        }
+                        if (param.getObjectClass() == Integer.class) {
+                            q.setParameter(param.getName(), param.getValue(), StandardBasicTypes.INTEGER);
+                        }
+                        if (param.getObjectClass() == Long.class) {
+                            q.setParameter(param.getName(), param.getValue(), StandardBasicTypes.LONG);
                         }
                         if (param.getObjectClass() == String.class) {
                             q.setParameter(param.getName(), param.getValue(), StandardBasicTypes.STRING);
@@ -160,14 +159,7 @@ public class UtilsRepository {
                 }
             }
         }
-        try {
-            q.executeUpdate();
-//        } catch (javax.persistence.QueryTimeoutException e) {   // PROCEDURILE SE EXECUTA INTR-UN INTERVAL MARE DE TIMP SI TREBUIE ELIMINATA CONDITIA DE TIMEOUT
-//            throwTimeoutException(Messages.TO_MUCH_DATA_TIMEOUT);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throwDatabaseException(e.getMessage());
-        }
+        return q;
     }
 
 
@@ -179,5 +171,16 @@ public class UtilsRepository {
         throw new CustomException(message, HttpStatus.BAD_REQUEST);
     }
 
+
+    public static BigDecimal getNextValue(SessionFactory sessionFactory, String query) {
+        try {
+            Session session = sessionFactory.getCurrentSession();
+            Query q = session.createNativeQuery(query);
+            return (BigDecimal) q.getSingleResult();
+        } catch (Exception e) {
+            throwDatabaseException(e.getMessage());
+            return null;
+        }
+    }
 
 }
