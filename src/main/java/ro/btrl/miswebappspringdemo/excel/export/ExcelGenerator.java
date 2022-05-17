@@ -12,11 +12,8 @@ import ro.btrl.miswebappspringdemo.exceptions.CustomException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,9 +48,11 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     protected final short HEADER_ROW_HEIGHT = 32 * HEIGHT_FACTOR;
     protected final short ROW_HEIGHT = 15 * HEIGHT_FACTOR;
 
-    protected final short WIDTH_FACTOR = 263;
-    protected final short DEFAULT_COLUMN_WIDTH = 30 * WIDTH_FACTOR;
-    protected final short SMALL_COLUMN_WIDTH = 11 * WIDTH_FACTOR;
+    protected static final short WIDTH_FACTOR = 263;
+    public static final short DEFAULT_COLUMN_WIDTH = 30 * WIDTH_FACTOR;
+    public static final short SMALL_COLUMN_WIDTH = 11 * WIDTH_FACTOR;
+    public static final short MEDIUM_COLUMN_WIDTH = 60 * WIDTH_FACTOR;
+    public static final short BIG_COLUMN_WIDTH = 90 * WIDTH_FACTOR;
 
 
     protected final int HEADER_ROW_INDEX = 0;
@@ -86,6 +85,8 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     protected CellStyle headerStyle;
 
     protected List<String> SMALL_SIZE_COLUMNS;
+    protected List<String> MEDIUM_SIZE_COLUMNS;
+    protected List<String> BIG_SIZE_COLUMNS;
 
     // messages
     protected final String FIELD_VALUE_EXTRACTION_ERROR = "Eroare la extragerea valorilor din obiecte!";
@@ -103,6 +104,7 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
     @Override
     protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws Exception {
         this.workbook = workbook;
+        init();
         fetchDataFromInput(model);
         initializeCellStyles();
         if (this.dataList != null && !this.dataList.isEmpty()) {
@@ -137,11 +139,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         this.dataList = (List<Object>) model.get(EXPORT_LIST_NAME);
         if (model.get(EXPORT_CUSTOM_ATTRIBUTES) != null) {
             customAttributes = (List<String>) model.get(EXPORT_CUSTOM_ATTRIBUTES);
-        }
-        if (model.get(EXPORT_SMALL_SIZE_COLUMNS) != null) {
-            SMALL_SIZE_COLUMNS = (List<String>) model.get(EXPORT_SMALL_SIZE_COLUMNS);
-        } else {
-            SMALL_SIZE_COLUMNS = new ArrayList<>();
         }
 
         if (model.get(MULTIPLE_DATA_LIST) != null) {
@@ -178,6 +175,15 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
         FieldOptions fieldOptions = getCellStyleFromOptions(excelFormatOptionsAnnotation, field.getType());
         fieldOptions.setInComposite(isInComposite);
         fieldOptions.setFieldName(field.getName());
+        if (excelFormatOptionsAnnotation != null && excelFormatOptionsAnnotation.dimension() == SMALL_COLUMN_WIDTH) {
+            SMALL_SIZE_COLUMNS.add(getHeaderEntryFromField(field));
+        }
+        if (excelFormatOptionsAnnotation != null && excelFormatOptionsAnnotation.dimension() == MEDIUM_COLUMN_WIDTH) {
+            MEDIUM_SIZE_COLUMNS.add(getHeaderEntryFromField(field));
+        }
+        if (excelFormatOptionsAnnotation != null && excelFormatOptionsAnnotation.dimension() == BIG_COLUMN_WIDTH) {
+            BIG_SIZE_COLUMNS.add(getHeaderEntryFromField(field));
+        }
         this.referenceObjectFieldsOptions.add(fieldOptions);
     }
 
@@ -198,11 +204,11 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                 fieldOptions.setStyle(getAlignedDateTimeStyle(alignment));
             } else if (excelFormatOptions.format() == INTEGER_DATA_FORMAT_STYLE) {
                 fieldOptions.setStyle(getAlignedIntegerStyle(alignment));
-            }else if (excelFormatOptions.format() == CUSTOM_DATA_FORMAT_STYLE && !excelFormatOptions.customFormatStyle().isEmpty()) {
+            } else if (excelFormatOptions.format() == CUSTOM_DATA_FORMAT_STYLE && !excelFormatOptions.customFormatStyle().isEmpty()) {
                 fieldOptions.setStyle(getAlignedSimpleStyle(alignment, excelFormatOptions.customFormatStyle()));
             } else {
                 fieldOptions.setNrGroupSeparation(false);
-                fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
+                fieldOptions.setStyle(getAlignedSimpleStyle(alignment, null));
             }
         } else {
             if (objectType.isPrimitive()) {
@@ -212,14 +218,14 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                     } else if (objectType.equals(short.class) || objectType.equals(int.class) || objectType.equals(long.class)) {
                         fieldOptions.setStyle(getAlignedIntegerStyle(alignment));
                     } else {
-                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
+                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment, null));
                     }
                 } else {
                     if (objectType.equals(double.class) || objectType.equals(float.class)
                             || objectType.equals(short.class) || objectType.equals(int.class) || objectType.equals(long.class)) {
-                        fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment,null ));
+                        fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment, null));
                     } else {
-                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
+                        fieldOptions.setStyle(getAlignedSimpleStyle(alignment, null));
                     }
                 }
             } else if (objectType.getSuperclass().equals(Number.class)) {
@@ -230,18 +236,17 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
                         fieldOptions.setStyle(getAlignedBigDecimalStyle(alignment));
                     }
                 } else {
-                    fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment,null ));
+                    fieldOptions.setStyle(getAlignedSimpleNumberStyle(alignment, null));
                 }
 
             } else if (objectType.equals(Date.class)) {
                 fieldOptions.setStyle(getAlignedDateStyle(alignment));
             } else {
-                fieldOptions.setStyle(getAlignedSimpleStyle(alignment,null ));
+                fieldOptions.setStyle(getAlignedSimpleStyle(alignment, null));
             }
         }
         return fieldOptions;
     }
-
 
     private CellStyle getAlignedSimpleStyle(String alignment, String format) {
         if (alignment == null || alignment.isEmpty()) {
@@ -373,27 +378,14 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
             field.setAccessible(true);
             if (field.get(object) instanceof Number) {
                 if (globalNrGroupSeparation && nrGroupSeparation) {
-                    return getValue(field,object);
+                    return field.get(object);
                 } else {
-                    return getValue(field,object).toString();
+                    return field.get(object).toString();
                 }
             } else {
-                return getValue(field,object);
-            }
-        } catch (IllegalAccessException e) {
-            throw new CustomException(FIELD_VALUE_EXTRACTION_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    private Object getValue(Field field, Object object) {
-        try {
-            try {
-                return new PropertyDescriptor(field.getName(), object.getClass()).getReadMethod().invoke(object);
-            } catch (InvocationTargetException | IntrospectionException e) {
-                field.setAccessible(true);
                 return field.get(object);
             }
-        } catch (IllegalAccessException ex) {
+        } catch (IllegalAccessException e) {
             throw new CustomException(FIELD_VALUE_EXTRACTION_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -458,9 +450,15 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
      * set every column width  from sheet
      */
     private void setColumnsWidth() {
+        System.out.println(this.header);
+        System.out.println(BIG_SIZE_COLUMNS);
         for (int i = 0; i <= header.size() - 1; i++) {
-            if (header.get(i) != null && SMALL_SIZE_COLUMNS.contains(header.get(i).trim())) {
+            if (header.get(i) != null && SMALL_SIZE_COLUMNS.contains(header.get(i))) {
                 this.workbook.getSheetAt(currentSheetIndex).setColumnWidth(i, SMALL_COLUMN_WIDTH);
+            } else if (header.get(i) != null && MEDIUM_SIZE_COLUMNS.contains(header.get(i))) {
+                this.workbook.getSheetAt(currentSheetIndex).setColumnWidth(i, MEDIUM_COLUMN_WIDTH);
+            } else if (header.get(i) != null && BIG_SIZE_COLUMNS.contains(header.get(i))) {
+                this.workbook.getSheetAt(currentSheetIndex).setColumnWidth(i, BIG_COLUMN_WIDTH);
             } else {
                 this.workbook.getSheetAt(currentSheetIndex).setColumnWidth(i, DEFAULT_COLUMN_WIDTH);
             }
@@ -512,6 +510,12 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
             splitString.append(word.toUpperCase()).append(" ");
         }
         return splitString.toString();
+    }
+
+    private void init() {
+        this.SMALL_SIZE_COLUMNS = new ArrayList<>();
+        this.MEDIUM_SIZE_COLUMNS = new ArrayList<>();
+        this.BIG_SIZE_COLUMNS = new ArrayList<>();
     }
 
     @Getter

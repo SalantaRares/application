@@ -79,6 +79,11 @@ public class ExcelController {
         return new ModelAndView(new ExcelGenerator(), model);
     }
 
+    @GetMapping("/exports/custom-formats")
+    private ModelAndView getExportExcelCustomFormats() {
+        return new ModelAndView(new ExcelGenerator(), ExcelGenerator.EXPORT_LIST_NAME, DataGenerator.generatePopulatedObjects(ExportClassExample.class, 10));
+    }
+
 
     @PostMapping(value = "/parse", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity parseExcel(MultipartFile file) throws IOException {

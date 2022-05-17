@@ -37,6 +37,8 @@ public class ExportClassExample {
     @ExcelFormatOptions(nrGroupSeparation = false)
     double attributeFifteenDouble;
     Boolean attributeSixteenBoolean;
-    @ExcelFormatOptions(format = ExcelGenerator.CUSTOM_DATA_FORMAT_STYLE, customFormatStyle ="###,###,###,##0.00%", alignment = ExcelGenerator.RIGHT_ALIGNMENT)
+    @ExcelFormatOptions(format = ExcelGenerator.CUSTOM_DATA_FORMAT_STYLE, customFormatStyle = "###,###,###,##0.00%", alignment = ExcelGenerator.RIGHT_ALIGNMENT)
     BigDecimal attributeSeventeenBigDecimal;
+    @ExcelFormatOptions(dimension = ExcelGenerator.BIG_COLUMN_WIDTH)
+    String longText;
 }
