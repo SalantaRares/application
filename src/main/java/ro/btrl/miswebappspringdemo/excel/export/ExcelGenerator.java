@@ -450,8 +450,6 @@ public class ExcelGenerator extends AbstractXlsxStreamingView {
      * set every column width  from sheet
      */
     private void setColumnsWidth() {
-        System.out.println(this.header);
-        System.out.println(BIG_SIZE_COLUMNS);
         for (int i = 0; i <= header.size() - 1; i++) {
             if (header.get(i) != null && SMALL_SIZE_COLUMNS.contains(header.get(i))) {
                 this.workbook.getSheetAt(currentSheetIndex).setColumnWidth(i, SMALL_COLUMN_WIDTH);
