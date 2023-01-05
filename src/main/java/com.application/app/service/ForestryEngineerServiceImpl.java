@@ -32,21 +32,21 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
 
 
     @Override
-    public List<AllClientsEntity> getAllClientsEntity(String user) {
+    public List<AllClientsEntity> getAllClientsEntity() {
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "null", "null", "null", "GET ALL",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         forestryEngineerDao.insertObject(logsUtilizatoriRaresEntity);
         return forestryEngineerDao.getAllClientsEntity();
     }
 
 
     @Override
-    public List<AllClients> getTodayExpire(String user) {
+    public List<AllClients> getTodayExpire() {
 
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "null", "null", "null", "GET TODAY EXPIRE",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
 
         forestryEngineerDao.insertObject(logsUtilizatoriRaresEntity);
 
@@ -54,23 +54,23 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
     }
 
     @Override
-    public List<AllClients> getExpireByGivenDate(Long date, String user) {
+    public List<AllClients> getExpireByGivenDate(Long date) {
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "null", "null", "null", "GET EXPIRE BY GIVEN DATE",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         forestryEngineerDao.insertObject(logsUtilizatoriRaresEntity);
         return forestryEngineerDao.getExpireByGivenDate(new Date(date));
     }
 
     @Override
-    public String insertNewClient(AllClientsDto allClientsDto, String user) {
+    public String insertNewClient(AllClientsDto allClientsDto) {
         AllClientsEntity entity = new AllClientsEntity(allClientsDto.getNume(), allClientsDto.getPrenume(), allClientsDto.getDataRidicarePortie(), allClientsDto.getDataScadentaRidicarePortie(), allClientsDto.getCantitateTotala(), allClientsDto.getUm(), allClientsDto.getImputernicit(), allClientsDto.getPortieAn(), allClientsDto.getPortieRamasaAniiAnteriori(),
                 allClientsDto.getHectareDetinute(), allClientsDto.getPortieRestanta(), allClientsDto.getCnpImputernicit(), allClientsDto.getAniiRestanta());
         entity.setCnp(allClientsDto.getCnp());
 
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "a line", allClientsDto.toString(), entity.toString(), "INSERT NEW CLIENT",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         try {
             basicDao.createObject(logsUtilizatoriRaresEntity);
         } catch (Exception e) {
@@ -89,7 +89,7 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
 
 
     @Override
-    public String giveAllQuantity(String cnp, String user) {
+    public String giveAllQuantity(String cnp) {
         AllClientsEntity entity = (AllClientsEntity) basicDao.getObjectById(cnp, AllClientsEntity.class);
         Date date = entity.getDataRidicarePortie();
         if (!(entity.getDataRidicarePortie().equals(new Date()))) {
@@ -99,7 +99,7 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
 
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "DATA_RIDICARE_PORTIE", date.toString(), entity.getDataRidicarePortie().toString(), "UPDATE",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         try {
             forestryEngineerDao.insertObject(logsUtilizatoriRaresEntity);
         } catch (Exception e) {
@@ -118,7 +118,7 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
 
 
     @Override
-    public String givePartQuantity(String cnp, BigDecimal portieMcPredata, String user) {
+    public String givePartQuantity(String cnp, BigDecimal portieMcPredata) {
         AllClientsEntity entity = (AllClientsEntity) basicDao.getObjectById(cnp, AllClientsEntity.class);
         Date date = entity.getDataRidicarePortie();
         if (!(entity.getDataRidicarePortie().equals(new Date()))) {
@@ -139,11 +139,11 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
         List<LogsUtilizatoriRaresEntity> list = new ArrayList<>();
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "DATA_RIDICARE_PORTIE", date.toString(), entity.getDataRidicarePortie().toString(), "UPDATE",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         list.add(logsUtilizatoriRaresEntity);
         logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "CANTITATE_TOTALA", date.toString(), entity.getCantitateTotala().toString(), "UPDATE",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         list.add(logsUtilizatoriRaresEntity);
         try {
             list.stream().forEach(entry -> {
@@ -165,12 +165,12 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
 
 
     @Override
-    public String updateRemainingYears(String cnp, String aniiRestanta, String user) {
+    public String updateRemainingYears(String cnp, String aniiRestanta) {
         AllClientsEntity entity = (AllClientsEntity) basicDao.getObjectById(cnp, AllClientsEntity.class);
         entity.setAniiRestanta(aniiRestanta);
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "ANII_RESTANTA", aniiRestanta.toString(), entity.getAniiRestanta(), "GET",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         try {
             forestryEngineerDao.insertObject(logsUtilizatoriRaresEntity);
         } catch (Exception e) {
@@ -210,8 +210,7 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
                                BigDecimal hectareDetinute,
                                BigDecimal portieRestanta,
                                String cnpImputernicit,
-                               String aniiRestanta,
-                               String user) {
+                               String aniiRestanta) {
         AllClientsEntity entity = (AllClientsEntity) basicDao.getObjectById(cnp, AllClientsEntity.class);
         AllClientsEntity entity1 = entity;
         if (Objects.nonNull(nume) && !(nume.equals(entity.getNume()))) {
@@ -256,7 +255,7 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
 
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "A LINE", entity1.toString(), entity.toString(), "UPDATE OBJECT",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         try {
             basicDao.createObject(logsUtilizatoriRaresEntity);
         } catch (Exception e) {
@@ -273,7 +272,7 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
     }
 
     @Override
-    public String importClientsFromExcel(MultipartFile file, String user) {
+    public String importClientsFromExcel(MultipartFile file) {
         List<AllClientsDtoTest> list = (List<AllClientsDtoTest>) Utils.extractFromExcelWithColumnOrderExtractionModeCheckType(file, AllClientsDtoTest.class);
         List<AllClientsEntity> allClientsEntityList = new ArrayList<>();
         List<AllClientsDtoTest> listWithErrors = new ArrayList<>();
@@ -290,7 +289,7 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
 
         LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
                 "INSERT FROM EXCEL", "null", allClientsEntityList.toString(), "INSERT",
-                user, (new Date()).toString(), "UTILIZATORI_RARES");
+                "user", (new Date()).toString(), "UTILIZATORI_RARES");
         try {
             basicDao.createObject(logsUtilizatoriRaresEntity);
         } catch (Exception e) {

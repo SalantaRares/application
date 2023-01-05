@@ -9,19 +9,19 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface ForestryEngineerService {
-    List<AllClientsEntity> getAllClientsEntity(String user);
+    List<AllClientsEntity> getAllClientsEntity();
 
-    List<AllClients> getTodayExpire(String user);
+    List<AllClients> getTodayExpire();
 
-    List<AllClients> getExpireByGivenDate(Long date, String user);
+    List<AllClients> getExpireByGivenDate(Long date);
 
-    String insertNewClient(AllClientsDto allClientsDto, String user);
+    String insertNewClient(AllClientsDto allClientsDto);
 
-    String giveAllQuantity(String cnp, String user);
+    String giveAllQuantity(String cnp);
 
-    String givePartQuantity(String cnp, BigDecimal portieMcPredata, String user);
+    String givePartQuantity(String cnp, BigDecimal portieMcPredata);
 
-    String updateRemainingYears(String cnp, String aniiRestanta, String user);
+    String updateRemainingYears(String cnp, String aniiRestanta);
 
     List<String> getAniiRestanta(String cnp);
 
@@ -38,8 +38,7 @@ public interface ForestryEngineerService {
                         BigDecimal hectareDetinute,
                         BigDecimal portieRestanta,
                         String cnpImputernicit,
-                        String aniiRestanta,
-                        String user);
+                        String aniiRestanta);
 
-    String importClientsFromExcel(MultipartFile file, String user);
+    String importClientsFromExcel(MultipartFile file);
 }
