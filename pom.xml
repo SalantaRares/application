@@ -9,11 +9,11 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>ro.btrl</groupId>
-	<artifactId>mis-webapp-spring-demo</artifactId>
+	<artifactId>webapp-spring-demo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
-	<name>mis-webapp-spring-demo</name>
-	<description>Demo project for Spring Boot</description>
+	<name>webapp-spring-demo</name>
+	<description>Demo project Spring Boot</description>
 	<properties>
 		<java.version>1.8</java.version>
 	</properties>
@@ -60,6 +60,12 @@
 			<version>5.0.2.RELEASE</version>
 		</dependency>
 		<!-- end hibernate-->
+
+<!--		<dependency>-->
+<!--			<groupId>org.mongodb</groupId>-->
+<!--			<artifactId>mongodb-driver</artifactId>-->
+<!--			<version>3.12.6</version>-->
+<!--		</dependency>-->
 
 		<!-- start excel-->
 		<dependency>

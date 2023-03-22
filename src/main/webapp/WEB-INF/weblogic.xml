@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://xmlns.oracle.com/weblogic/weblogic-web-app
         http://xmlns.oracle.com/weblogic/weblogic-web-app/1.4/weblogic-web-app.xsd">
-    <context-root>/MIS/SpringDemo</context-root> <!-- base root for this application -->
+    <context-root>/MIS/Application</context-root> <!-- base root for this application -->
     <container-descriptor>
         <prefer-application-packages>
             <package-name>org.springframework.*</package-name>
