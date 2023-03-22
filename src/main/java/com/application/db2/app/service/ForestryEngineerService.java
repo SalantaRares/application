@@ -3,6 +3,7 @@ package com.application.db2.app.service;
 import com.application.db2.app.dtos.AllClientsDto;
 import com.application.db2.app.models.AllClients;
 import com.application.db2.app.entities.AllClientsEntity;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -40,5 +41,5 @@ public interface ForestryEngineerService {
                         String aniiRestanta,
                         String user);
 
-   // String importClientsFromExcel(MultipartFile file, String user);
+    String importClientsFromExcel(MultipartFile file, String user);
 }

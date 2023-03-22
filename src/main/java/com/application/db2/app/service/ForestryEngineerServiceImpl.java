@@ -1,6 +1,7 @@
 package com.application.db2.app.service;
 
 import com.application.db2.app.dtos.AllClientsDto;
+import com.application.db2.app.dtos.AllClientsDtoTest;
 import com.application.db2.app.entities.LogsUtilizatoriRaresEntity;
 import com.application.db2.app.models.AllClients;
 import com.application.db2.app.repository.dao.basic.BasicDao;
@@ -11,12 +12,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.application.db2.app.entities.AllClientsEntity;
 import com.application.exceptions.CustomException;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class ForestryEngineerServiceImpl implements ForestryEngineerService {
@@ -269,41 +272,40 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
             throw new CustomException("Am intampinat o eroare " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-//
-//    @Override
-//    public String importClientsFromExcel(MultipartFile file, String user) {
-//        List<AllClientsDtoTest> list = (List<AllClientsDtoTest>) Utils.extractFromExcelWithColumnOrderExtractionModeCheckType(file, AllClientsDtoTest.class);
-//        List<AllClientsEntity> allClientsEntityList = new ArrayList<>();
-//        List<AllClientsDtoTest> listWithErrors = new ArrayList<>();
-//        list.stream().distinct().collect(Collectors.toList());
-//        list.stream().forEach(entry -> {
-//            AllClientsEntity newEntry = new AllClientsEntity(entry);
-//            newEntry.setCnp(entry.getCnp());
-//            if (newEntry.isValid()) {
-//                listWithErrors.add(entry);
-//            } else {
-//                allClientsEntityList.add(newEntry);
-//            }
-//        });
-//
-//        LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId().toString(),
-//                "INSERT FROM EXCEL", "null", allClientsEntityList.toString(), "INSERT",
-//                user, (new Date()).toString(), "UTILIZATORI_RARES");
-//        try {
-//            basicDao.createObject(logsUtilizatoriRaresEntity);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            throw new CustomException("Probleme la inserarea in tabela de log uri. Eroarea: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-//        }
-//        if (!allClientsEntityList.isEmpty()) {
-//            try {
-//                forestryEngineerDao.insertClientsFromExcel(allClientsEntityList);
-//                return "Inserarea de date din excel a avut loc cu succes!";
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return null;
-//    }
+
+    @Override
+    public String importClientsFromExcel(MultipartFile file, String user) {
+        List<AllClientsDtoTest> list = (List<AllClientsDtoTest>) Utils.extractFromExcel(file, AllClientsDtoTest.class, true);
+        List<AllClientsEntity> allClientsEntityList = new ArrayList<>();
+        List<AllClientsDtoTest> listWithErrors = new ArrayList<>();
+        list.stream().distinct().collect(Collectors.toList());
+        list.stream().forEach(entry -> {
+            AllClientsEntity newEntry = new AllClientsEntity(entry);
+            newEntry.setCnp(entry.getCnp());
+            if (newEntry.isValid()) {
+                listWithErrors.add(entry);
+            } else {
+                allClientsEntityList.add(newEntry);
+            }
+        });
+        LogsUtilizatoriRaresEntity logsUtilizatoriRaresEntity = new LogsUtilizatoriRaresEntity(forestryEngineerDao.requestId(),
+                "INSERT FROM EXCEL", "null", allClientsEntityList.toString(), "INSERT",
+                user, (new Date()).toString(), "UTILIZATORI_RARES");
+        try {
+            basicDao.createObject(logsUtilizatoriRaresEntity);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new CustomException("Probleme la inserarea in tabela de log uri. Eroarea: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (!allClientsEntityList.isEmpty()) {
+            try {
+                forestryEngineerDao.insertClientsFromExcel(allClientsEntityList);
+                return "Inserarea de date din excel a avut loc cu succes!";
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
 
 }

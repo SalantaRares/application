@@ -1,8 +1,10 @@
 package com.application.db2.app.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 import com.application.db2.app.dtos.AllClientsDto;
 import com.application.db2.app.service.ForestryEngineerService;
@@ -100,4 +102,9 @@ public class ForestryEngineerController {
     }
 
 
+    @PostMapping(value = "/import-from-excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity importDataFromExcel(@RequestParam(name = "file") MultipartFile multipartFile,
+                                              Principal principal) {
+        return ResponseEntity.status(HttpStatus.OK).body(forestryEngineerService.importClientsFromExcel(multipartFile, Utils.getUserNameFromPrincipal(principal)));
+    }
 }
