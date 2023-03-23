@@ -3,7 +3,7 @@ package com.application.db2.app.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import com.application.db2.app.dtos.AllClientsDtoTest;
+import com.application.db2.app.dtos.forestryEngineer.AllClientsDtoTest;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

@@ -1,4 +1,4 @@
-package com.application.db2.app.dtos;
+package com.application.db2.app.dtos.forestryEngineer;
 
 
 import lombok.Data;

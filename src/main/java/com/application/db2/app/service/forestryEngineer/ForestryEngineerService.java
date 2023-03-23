@@ -1,6 +1,6 @@
-package com.application.db2.app.service;
+package com.application.db2.app.service.forestryEngineer;
 
-import com.application.db2.app.dtos.AllClientsDto;
+import com.application.db2.app.dtos.forestryEngineer.AllClientsDto;
 import com.application.db2.app.models.AllClients;
 import com.application.db2.app.entities.AllClientsEntity;
 import org.springframework.web.multipart.MultipartFile;

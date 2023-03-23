@@ -1,4 +1,4 @@
-package com.application.db2.app.repository.query;
+package com.application.db2.app.repository.query.forestryEngineer;
 
 
 public class ForestryEngineerQueries {

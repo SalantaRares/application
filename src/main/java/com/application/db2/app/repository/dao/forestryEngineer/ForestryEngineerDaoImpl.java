@@ -1,7 +1,7 @@
 package com.application.db2.app.repository.dao.forestryEngineer;
 
 import com.application.db2.app.models.AllClients;
-import com.application.db2.app.repository.query.ForestryEngineerQueries;
+import com.application.db2.app.repository.query.forestryEngineer.ForestryEngineerQueries;
 import com.application.utils.UtilsRepository;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;

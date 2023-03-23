@@ -1,12 +1,12 @@
-package com.application.db2.app.service;
+package com.application.db2.app.service.forestryEngineer;
 
-import com.application.db2.app.dtos.AllClientsDto;
-import com.application.db2.app.dtos.AllClientsDtoTest;
+import com.application.db2.app.dtos.forestryEngineer.AllClientsDto;
+import com.application.db2.app.dtos.forestryEngineer.AllClientsDtoTest;
 import com.application.db2.app.entities.LogsUtilizatoriRaresEntity;
 import com.application.db2.app.models.AllClients;
 import com.application.db2.app.repository.dao.basic.BasicDao;
 import com.application.db2.app.repository.dao.forestryEngineer.ForestryEngineerDao;
-import com.application.db2.app.repository.query.ForestryEngineerQueries;
+import com.application.db2.app.repository.query.forestryEngineer.ForestryEngineerQueries;
 import com.application.utils.hibernate.Utils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,6 +15,8 @@ import com.application.exceptions.CustomException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -307,5 +309,4 @@ public class ForestryEngineerServiceImpl implements ForestryEngineerService {
         }
         return null;
     }
-
 }

@@ -6,8 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
-import com.application.db2.app.dtos.AllClientsDto;
-import com.application.db2.app.service.ForestryEngineerService;
+import com.application.db2.app.dtos.forestryEngineer.AllClientsDto;
+import com.application.db2.app.service.forestryEngineer.ForestryEngineerService;
 import com.application.excel.export.ExcelGenerator;
 import com.application.utils.hibernate.Utils;
 
@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import java.security.Principal;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/forestry-engineer")
 public class ForestryEngineerController {
     private final ForestryEngineerService forestryEngineerService;
 
