@@ -1,5 +1,6 @@
 package com.application.config;
 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,6 +9,8 @@ import java.util.List;
 public class AppConfig {
     private static final List<String> productionMachines = new ArrayList<>(Arrays.asList("mis-wbl-01-prd", "mis-wbl-02-prd"));
     private static final List<String> developmentMachines = new ArrayList<>(Arrays.asList("mdl07cj001"));
+    private static final List<String> developmentMachines2 = new ArrayList<>(Arrays.asList("mis-wbl-01-dev.bt.wan"));
+
     private static AppConfig appConfigInstance = null;
     public boolean IS_PRODUCTION = false;
     public String ANAF_TARGET_DIRECTORY = null;
@@ -36,6 +39,9 @@ public class AppConfig {
             this.parameters = configMap.get("DEV");
             this.ANAF_TARGET_DIRECTORY = TARGET_DIRECTORY_FOLDER.get("DEV");
         }
+        if (developmentMachines2.contains(info.getMachineName())) {
+            this.parameters = configMap.get("DEV2");
+        }
     }
 
     private static HashMap<String, Parameters> configMap;
@@ -52,6 +58,7 @@ public class AppConfig {
         TARGET_DIRECTORY_FOLDER = new HashMap<>();
         TARGET_DIRECTORY_FOLDER.put("PROD", "/mis_extrase/extfiles/anaf/upload/");
         TARGET_DIRECTORY_FOLDER.put("DEV", "/u01/app/oracle/product/fmw/12c/user_projects/domains/mis_adf_domain/servers/adf_server2/anaf/");
+        configMap.put("DEV2", new Parameters("HTTP/mis-wbl-01-dev.bt.wan", "/u01/oracle/projects/domains/mis_domain/mis-wbl-01-dev.bt.wan.keytab"));
     }
 
 

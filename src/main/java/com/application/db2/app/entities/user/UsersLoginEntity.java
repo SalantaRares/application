@@ -16,7 +16,7 @@ import java.util.Date;
 @Entity
 @Table(name = "useri_utilizatori_rares", schema = "DEV_ADF_APPL")
 public class UsersLoginEntity {
-    @Id()
+    @Id
     @Column(name = "USERNAME")
     private String username;
     @Column(name = "PASSWORD")

@@ -84,6 +84,14 @@
 			<version>4.0.1</version>
 		</dependency>
 		<!-- end excel-->
+		<!--Start dependency for mysql-->
+
+		<dependency>
+   <groupId>mysql</groupId>
+   <artifactId>mysql-connector-java</artifactId>
+			<version>5.1.6</version>
+</dependency>
+		<!--End dependency for mysql-->
 		<!-- Start dependency for security-->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
